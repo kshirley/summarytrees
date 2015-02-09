@@ -1,0 +1,12 @@
+Package: summarytrees
+Title: Compute and Visualize Summary Trees
+Version: 0.1
+Authors@R: c(person("Kenny", "Shirley", role = c("aut", "cre"), email =
+    "kshirley@research.att.com"), person("Howard", "Karloff", role = "aut",
+    email = "howard@cc.gatech.edu"))
+Description: Compute maximum entropy summary trees for data
+    that can be represented by a rooted, node-weighted tree.
+Depends:
+    R (>= 2.10)
+License: EPL == 1.0
+LazyData: true
