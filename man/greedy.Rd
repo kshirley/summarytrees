@@ -3,15 +3,24 @@
 \alias{greedy}
 \title{Compute summary trees using greedy algorithm}
 \usage{
-greedy(tree = matrix(), weights = numeric(), labels = character(),
-  K = integer())
+greedy(nodes = integer(), parents = integer(), weights = numeric(),
+  labels = character(), K = integer())
 }
 \arguments{
-\item{structure}{an integer matrix with three columns and \code{P}
-rows. The first column contains the indices of the parent nodes in
+\item{tree}{an integer matrix with three columns and as many rows
+as there are parent nodes in the tree.
+The first column contains the indices of the parent nodes in
 the tree. The second column contains the index of the first child
 node of a given parent node, and the third column contains the index
 of the last child of a given parent node.}
+
+\item{nodes}{integer vector containing a set of positive, unique, integers
+denoting the identities of the nodes of the tree}
+
+\item{parents}{integer vector containing the (positive integer) id of the
+parent of each node in the tree. One  and only one element of
+\code{parents} must be set to zero, indicating which node is the root of
+the tree.}
 
 \item{weights}{numeric vector containing non-negative weight of each node
 in the tree.}
@@ -23,13 +32,16 @@ in the tree.}
 \value{
 A length-K list of matrices, where each matrix represents the
 summary tree with K nodes. The kth matrix contains k rows and 4 columns.
+(describe the columns later...)
 }
 \description{
 Compute a series of summary trees for a given
 input tree using a greedy algorithm. This algorithm returns summary
-trees whose entropies are typically within 5% of the maximum
-possible entropy (based on a series of experiments). The
-algorithm runs substantially faster than the optimal algorithm.
+trees whose entropies are typically within 5\% of the maximum
+possible entropy (based on a series of experiments described by
+the paper cited in the references). The
+algorithm runs substantially faster than the optimal algorithm, which
+is also described in the paper in the references.
 }
 \references{
 \url{http://www2.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf}

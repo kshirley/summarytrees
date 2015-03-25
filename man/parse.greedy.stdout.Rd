@@ -20,7 +20,8 @@ summary tree, which is one of 3 types: (a) singleton, (b) subtree, or
 This function parses the text that is printed to standard output
 after the C program to implement the greedy algorithm is run.
 Eventually we'll replace this, but for now it's the simplest
-way to write an R wrapper around Howard's C function.
+way to write an R wrapper around the C function originally
+written by H. Karloff.
 }
 \references{
 \url{http://www2.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf}

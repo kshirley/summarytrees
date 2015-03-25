@@ -15,6 +15,14 @@
 #' node of a given parent node, and the third column contains the index
 #' of the last child of a given parent node.
 #'
+#' @param nodes integer vector containing a set of positive, unique, integers
+#' denoting the identities of the nodes of the tree
+#'
+#' @param parents integer vector containing the (positive integer) id of the 
+#' parent of each node in the tree. One  and only one element of 
+#' \code{parents} must be set to zero, indicating which node is the root of
+#' the tree.
+#'
 #' @param weights numeric vector containing non-negative weight of each node
 #' in the tree.
 #' @param labels character vector containing labels for each node in the tree
@@ -30,8 +38,12 @@
 #'
 #' @export
 #'
-greedy <- function(tree = matrix(), weights = numeric(), labels = character(), 
-                   K = integer()) {
+greedy <- function(nodes = integer(), parents = integer(), weights = numeric(), 
+                   labels = character(), K = integer()) {
+
+  # convert the node-parent input data to the parent-children data required by
+  # the program:
+  tree <- get.tree(nodes = nodes, parents = parents, weights = weights, labels = labels)$tree
 
   # check the input tree:
   if (any(duplicated(tree[, 1]))) {
@@ -91,6 +103,8 @@ greedy <- function(tree = matrix(), weights = numeric(), labels = character(),
 
   output <- tmp[1:(which(tmp == "$R_K") - 1)]
   out <- parse.greedy.stdout(output)$x
+  out[[1]] <- matrix(c(1, sum(weights), 2), nrow = 1)
+  colnames(out[[1]]) <- c("node", "weight", "cluster")  
   return(out)
 }
 
