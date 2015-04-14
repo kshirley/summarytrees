@@ -101,9 +101,6 @@ void Rgreedy(int *R_K, int *R_n, int *R_numparents,
   for (i = 1; i <= numparents; ++i) {
     childstart[childindex[i]] = R_childstart[i - 1];
     childend[childindex[i]] = R_childend[i - 1];
-    /* if ((i <= 10) || (i == numparents)) { */
-    /*   Rprintf("childstart[%d] = %d and childend[%d] = %d.\n", i, childstart[i], i, childend[i]); */
-    /* } */
   }
 
   // fill weight from input:
@@ -346,8 +343,6 @@ void Rgreedy(int *R_K, int *R_n, int *R_numparents,
 } // main
 
 
-
-
 // special function to handle log(0)
 double xlogx(double x) {
   //assert(x >= 0);
@@ -357,7 +352,8 @@ double xlogx(double x) {
 
 ////////////////////////////////////////////////////////////
 
-float combine(double h1, double w1, double h2, double w2) { // In greedy, we allow
+float combine(double h1, double w1, double h2, double w2) {
+  // In greedy, we allow
   // real weights, which we do not allow in the approximation code.
   double q, Hofq;
   assert(w1 >= 0);
