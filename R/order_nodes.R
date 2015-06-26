@@ -90,7 +90,7 @@ order.nodes <- function(node = integer(), parent = integer(),
   # order by level, then parent, then weight, then label:
   # here we re-order the whole data each time, for each level
   # probably only need to do this for the nodes at a given level
-  # come back to improve this (to save time)
+  # come back later to improve this (to speed it up)
   for (i in 1:D) {
     # re-order rows of data
     data <- data[order(data[, "level"], data[, "parent"], data[, "weight"], data[, "label"]), ]
