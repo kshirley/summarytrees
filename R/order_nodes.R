@@ -6,16 +6,16 @@
 #' and last child identifier, after re-ordering all nodes to be
 #' in decreasing order of level, and such that all children of
 #' a given parent node have consecutive integer identifiers.
-#' This is a utility function that takes the user-friendly 
+#' This is a utility function that takes the user-friendly
 #' node-parent data format and converts it to the parent-children
-#' format that is currently required by the function that does the 
+#' format that is currently required by the function that does the
 #' computation of the maximum entropy summary trees.
 #'
 #' @param node integer vector containing a set of positive, unique, integers
 #' denoting the identities of the nodes of the tree
 #'
-#' @param parent integer vector containing the (positive integer) id of the 
-#' parent of each node in the tree. One  and only one element of 
+#' @param parent integer vector containing the (positive integer) id of the
+#' parent of each node in the tree. One  and only one element of
 #' \code{parents} must be set to zero, indicating which node is the root of
 #' the tree.
 #'
@@ -27,21 +27,21 @@
 #' each node in the tree. Used in this function only for breaking ties
 #' in ordering of children.
 #'
-#' @return list containing two elements: \code{tree}, an integer matrix 
+#' @return list containing two elements: \code{tree}, an integer matrix
 #' with three columns and as many rows
 #' as there are parent nodes in the tree.
-#' The first column contains the indices of the parent nodes in 
+#' The first column contains the indices of the parent nodes in
 #' the tree. The second column contains the indices of the first child
 #' node of each parent node, and the third column contains the indices
 #' of the last child node of each parent node. Second, \code{data}, a
-#' data.frame containing five columns: node, parent, weights, labels, 
+#' data.frame containing five columns: node, parent, weights, labels,
 #' and level, which is equal to 1 for the root of the tree. This
 #' data.frame is returned because the ordering of the nodes may be
 #' changed by running this function.
 #'
 #' @export
 #'
-order.nodes <- function(node = integer(), parent = integer(), 
+order.nodes <- function(node = integer(), parent = integer(),
                         weight = numeric(), label = character()) {
 
   # Check the inputs:
@@ -71,6 +71,7 @@ order.nodes <- function(node = integer(), parent = integer(),
   if (any(weight < 0)) {
     stop("Error: Weights must be nonnegative")
   }
+  # Note: How can we check that there are no cycles in the graph?
 
   # compute the level of each node:
   level <- numeric(n)
@@ -85,7 +86,8 @@ order.nodes <- function(node = integer(), parent = integer(),
   D <- max(level)
 
   # create a data.frame to hold the tree information:
-  data <- data.frame(node, parent, weight, label, level, stringsAsFactors = FALSE)
+  data <- data.frame(node, parent, weight, label, level,
+                     stringsAsFactors = FALSE)
 
   # order by level, then parent, then weight, then label:
   # here we re-order the whole data each time, for each level
@@ -93,7 +95,10 @@ order.nodes <- function(node = integer(), parent = integer(),
   # come back later to improve this (to speed it up)
   for (i in 1:D) {
     # re-order rows of data
-    data <- data[order(data[, "level"], data[, "parent"], data[, "weight"], data[, "label"]), ]
+    data <- data[order(data[, "level"],
+                       data[, "parent"],
+                       data[, "weight"],
+                       data[, "label"]), ]
     # re-number the nodes
     data[, "parent"] <- match(data[, "parent"], data[, "node"])
     data[, "node"] <- 1:n
@@ -110,8 +115,8 @@ order.nodes <- function(node = integer(), parent = integer(),
   }
 
   # gather into a data.frame called "child.index":
-  tree <- cbind(sort(unique(data[, "parent"]))[-1], 
-                first.child[first.child != 0], 
+  tree <- cbind(sort(unique(data[, "parent"]))[-1],
+                first.child[first.child != 0],
                 last.child[last.child != 0])
   return(list(tree = tree, data = data))
 }

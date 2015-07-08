@@ -9,6 +9,10 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(collapse = FALSE, comment = "#>")
+```
+
 This vignette demonstrates how to compute and visualize summary trees. We will do this using two data sets that can be represented by rooted, node-weighted trees, where the node weights are non-negative:
 
 1. The flare software package, where the nodes of the tree are files or directories, the weights are file sizes in bytes (where directories have size zero), and the tree structure is given by the file structure of the package directory.
@@ -16,7 +20,9 @@ This vignette demonstrates how to compute and visualize summary trees. We will d
 2. The webpage categories from the Open Directory Project, also known as DMOZ. Here, the nodes of the tree are categories of webpage types, the weights are the counts of how many webpages in DMOZ belong to each category, and the tree structure is given by the category hierarchy created by the DMOZ editors.
 
 First, load the package:
-```{r}
+```{r libraries}
+library(devtools)
+install("~/Git/summarytrees/")
 library(summarytrees)
 ```
 
@@ -31,25 +37,123 @@ Next, we converted the json file to a data.frame in R using the following code:
 
 This data.frame version of the data is included in the `data` directory of the `summarytrees` package. To load it, just type:
 
-```{r}
+```{r load-flare}
 data(flare)
 dim(flare)
 head(flare)
 ```
 
-## Styles
+There are four columns in the data.frame: node, parent, weight, and label, where `node` and `parent` are non-negative integer ID numbers (with each node ID number being unique), weight is a non-negative numeric value indicating the weight of each node, and `label` is a character vector of node labels (which need not be unique). There must be exactly one element of `parent` set to 0, indicating the root node of the tree.
 
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+First we'll divide the weights by 1000 (to measure them in kilobytes rather than bytes) and round to the nearest integer.
 
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
+```{r round-weights}
+flare[, "weight"] <- round(flare[, "weight"]/1000)
+```
+
+The first function to run is `order.nodes()`, which simply re-orders the nodes and numbers them consecutively from 1 to `n`, where `n` is the total number of nodes in the tree. The re-ordering ensures that the nodes are ordered first by level, then by parent within level, then by size within parent (where a node's size is the sum of the weights of all its descendants), and finally in alphabetical order by label (among equal-sized nodes with the same parent).
+
+
+```{r order-nodes}
+tmp <- order.nodes(node = flare[, "node"], 
+                   parent = flare[, "parent"], 
+                   weight = flare[, "weight"], 
+                   label = flare[, "label"])
+```
+
+Now, we scramble the node ID numbers and call `order.nodes()` again to see that we get the same, stable result.
+
+```{r check-node-order}
+n <- dim(flare)[1]
+f <- flare
+set.seed(345)
+f[, 1] <- sample(n)
+f[, 2] <- c(0, f[f[, 2], 1])
+f <- f[order(f[, 1]), ]
+tmp2 <- order.nodes(node = f[, "node"], 
+                    parent = f[, "parent"], 
+                    weight = f[, "weight"], 
+                    label = f[, "label"])
+for (i in 1:4) {
+  print(sum(tmp$data[, i] == tmp2$data[, i]))
+}
+```
+
+
+Notes:
+
+- We can probably speed this function up by only sorting the nodes at a given level rather than the whole tree each time.
+
+- We also need to think about whether the current tie-breakers are enough to define a unique, canonical version of a tree. I think not. If two sibling nodes have the same size and label, they are indistinguishable by the `order.nodes()` function, but their subtrees may have very different structures.
+
+- Is there an off-the-shelf solution for (1) verifying that a given input structure is, indeed, a rooted, node-weighted tree, and (2) computing a stable version of that tree?
+
+## Maximum Entropy Summary Trees
+
+Here we compute the maximum entropy $k$-node summary trees for $k = 1, 2, ..., 10$ using three different versions of the algorithm.
+
+## Greedy Algorithm:
+```{r greedy-flare}
+g <- greedy(node = flare[, "node"], 
+            parent = flare[, "parent"], 
+            weight = flare[, "weight"], 
+            label = flare[, "label"], 
+            K = 20)
+```
+
+
+## Optimal Algorithm (exact solution):
+```{r exact-flare}
+t1 <- Sys.time()
+e <- optimal(node = flare[, "node"], 
+             parent = flare[, "parent"], 
+             weight = flare[, "weight"], 
+             label = flare[, "label"], 
+             K = 20, 
+             epsilon = 0)
+t2 <- Sys.time()
+t2 - t1
+```
+
+
+## Optimal Algorithm (approximation):
+```{r approximate-flare}
+t1 <- Sys.time()
+a <- optimal(node = flare[, "node"], 
+             parent = flare[, "parent"], 
+             weight = flare[, "weight"], 
+             label = flare[, "label"], 
+             K = 20, 
+             epsilon = 0.1)
+t2 <- Sys.time()
+t2 - t1
+```
+
+To compare the resulting 10-node summary trees, for example, we just have to print them out:
+```{r print-st}
+g[[10]]
+e[[10]]
+a[[10]]
+```
+In this case, all three 10-node summary trees are the same. In other words, for $k=10$, the greedy algorithm and the approximate algorithm returned the maximum entropy summary tree (which is always the result of the exact algorithm).
+
+Sometimes the greedy algorithm does not return the maximum entropy summary tree for a given data set and value of $k$. This is to be expected -- it is not guaranteed to find the global maximum; in practice, it runs much faster than the exact algorithm, and often returns summary trees whose entropies are very close to that of the maximum entropy summary tree.
+
+The approximate algorithm is guaranteed to return a summary tree whose entropy is within $\epsilon$ of the global maximum entropy over all $k$-node summary trees. In this case, the approximate algorithm gave the optimal result.
+
+## Visualization
+
+The main reason to compute maximum entropy summary trees is to visualize them, and the visuzlizaiton is more powerful when one can interactively transition among the $k$-node summary trees for $k = 1, ..., K$, where typically, $50 \leq K \leq 500$.
+
+In this section we show how the `summarytrees` package can be used to construct a web-based interactive visualization using d3.js.
+
+
 
 ## Figures
 
 The figure sizes have been customised so that you can easily put two images side-by-side. 
 
-```{r, fig.show='hold'}
+```{r example-figure, fig.show='hold'}
 plot(1:10)
 plot(10:1)
 ```
@@ -66,7 +170,7 @@ Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr*
 
 You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
 
-```{r, echo=FALSE, results='asis'}
+```{r example-table, echo=FALSE, results='asis'}
 knitr::kable(head(mtcars, 10))
 ```
 
