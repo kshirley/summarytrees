@@ -367,11 +367,11 @@ void Roptimal(int *R_K, int *R_n, int *R_numparents,
   n = R_n[0];
   numparents = R_numparents[0];
 
-  lnn=log(1.0*n);
+  lnn = log(1.0*n);
   
   
   // seed = time(0); srand48(seed);
-  seed=0; srand48(seed);
+  seed = 0; srand48(seed);
   
   //printf("Don't forget to change stacksize via 'limit stacksize 100000'\n");
   //printf("Enter K=maximum value of k: ");
@@ -391,19 +391,19 @@ void Roptimal(int *R_K, int *R_n, int *R_numparents,
   
   eps = R_epsilon[0];
 
-  assert(0<=eps);
-  assert(eps<=log(K)); // since max entropy of all instances
+  assert(0 <= eps);
+  assert(eps <= log(K)); // since max entropy of all instances
   // over k=1,2,...,K is ln(K), so there's no need for an eps>ln(K).
   // @@@ Binary or natural log?
-  exact=(eps==0);
+  exact = (eps == 0);
   //sprintf(epsstring,"%s%0.5f","eps",eps);
   
-  strcat(outputtreefilename,epsstring);
-  strcat(outputtreefilename,"treesout.txt");
-  strcat(outputclusterfilename,epsstring);
-  strcat(outputclusterfilename,"clustersout.txt");
-  strcat(mainoutputfilename,epsstring);
-  strcat(mainoutputfilename,"mainoutput.txt");
+  strcat(outputtreefilename, epsstring);
+  strcat(outputtreefilename, "treesout.txt");
+  strcat(outputclusterfilename, epsstring);
+  strcat(outputclusterfilename, "clustersout.txt");
+  strcat(mainoutputfilename, epsstring);
+  strcat(mainoutputfilename, "mainoutput.txt");
   //mainoutputfile=fopen(mainoutputfilename,"w");
   
   //fprintf(mainoutputfile,"Using tree file '%s' and weight file '%s'.\n",treefilename,weightsfilename);
@@ -455,64 +455,63 @@ void Roptimal(int *R_K, int *R_n, int *R_numparents,
   // so we can start from D/2 instead of D/k.
   
   // This part is unused if exact is true.
-  Wopt=-INTINFTY; // to prevent compiler warning
+  Wopt = -INTINFTY; // to prevent compiler warning
   // WARNING:  Security risk!  What if the user uses "name; rm *"
   // as the filename?  This will delete everything!
-  now=time(NULL);
+  now = time(NULL);
   //fprintf(mainoutputfile,"The time is now %s",ctime(&now));
   if (!exact) {
     // fprintf(mainoutputfile,"Enter upper bound D on maximum absdiscrep: ");
     // scanf("%d",&D);
     // fprintf(mainoutputfile,"D=%d.\n",D);
-    D=3*K; // because D=K+2KM, according to the writeup, and M=1.
-    assert(D>=1);
-    lnD=log(1.0*D);
-    left=(long) D/2; if (2*left<D) ++left; // left=ceiling(D/2).
+    D = 3*K; // because D=K+2KM, according to the writeup, and M=1.
+    assert(D >= 1);
+    lnD = log(1.0*D);
+    left = (long) D/2; if (2*left < D) ++left; // left=ceiling(D/2).
     //if (DEBUG) fprintf(mainoutputfile,"line 465: left=%ld.\n",left);
-    g1=gg(D,K,left);
-    if (ASSERT) assert(g1>eps);
-    maxnum=K;
-    if (1.0/eps>maxnum) maxnum=1.0/eps;
-    if (10/log(2.0)>maxnum) maxnum=10/log(2.0);
-    right=W0=(long)ceil((10/log(2.0))*D*log(maxnum)/eps);
+    g1 = gg(D, K, left);
+    if (ASSERT) assert(g1 > eps);
+    maxnum = K;
+    if (1.0/eps > maxnum) maxnum = 1.0/eps;
+    if (10/log(2.0) > maxnum) maxnum = 10/log(2.0);
+    right = W0 = (long)ceil((10/log(2.0))*D*log(maxnum)/eps);
     // fprintf(mainoutputfile,"line 472: right=%ld.\n",right);
-    g2=gg(D,K,right);
-    if (ASSERT) assert(g2<=eps);
+    g2 = gg(D, K, right);
+    if (ASSERT) assert(g2 <= eps);
     // Now do binary search to find least W in the interval
     // [left,right] such that gg(D,K,W)<=eps.
     // Maintain invariant that gg(D,K,left)>eps and gg(D,K,right)<=eps.
     // For fixed D,K, gg is decreasing for W>=D/k.
-    while (right>=left+2) {
-      mid=(long)(left+right)/2;
-      if (ASSERT) assert((left<mid)&&(mid<right));
+    while (right >= left + 2) {
+      mid = (long)(left + right)/2;
+      if (ASSERT) assert((left < mid) && (mid < right));
       //if (DEBUG) fprintf(mainoutputfile,"line 482: mid =%ld.\n",mid);
-      gval=gg(D,K,mid);
+      gval = gg(D, K, mid);
       //if (DEBUG) fprintf(mainoutputfile,"gg(%ld)=%lf.\n",mid,gval);
-      if (gval>eps) {
-        left=mid;
+      if (gval > eps) {
+        left = mid;
         //if (DEBUG) fprintf(mainoutputfile,"Line 488: Just set left to %ld.\n",mid);
       }
       else {
-        right=mid;
+        right = mid;
         //if (DEBUG) fprintf(mainoutputfile,"Line 492: Just set right to %ld.\n",mid);
       }
       //if (DEBUG) fprintf(mainoutputfile,"Now [%ld,%ld].\n",left,right);
     }
-    if (ASSERT) assert(right==left+1);
-    if (ASSERT) assert((gg(D,K,left)>eps)&&(gg(D,K,right)<=eps));
-    Wopt=right;
+    if (ASSERT) assert(right == left + 1);
+    if (ASSERT) assert((gg(D, K, left) > eps) && (gg(D, K, right) <= eps));
+    Wopt = right;
     //fprintf(mainoutputfile,"Wopt=%ld.\n",Wopt);
     // Later we will scale the input weights so that they
     // add up exactly to Wopt, if exact=0.
   }
   
-  F=(float **) malloc ((1+n)*sizeof(float *));
-  assert(F!=NULL);
-  for (i=0; i<=n; ++i) {
-    F[i]=(float *) malloc((1+K)*sizeof(float));
-    assert(F[i]!=NULL);
+  F = (float **) malloc ((1 + n)*sizeof(float *));
+  assert(F != NULL);
+  for (i = 0; i <= n; ++i) {
+    F[i] = (float *) malloc((1 + K)*sizeof(float));
+    assert(F[i] != NULL);
   }
-  
   
   for (v=0; v<=n; ++v) { // node 0 doesn't really exist, though.
     childstart[v]=childend[v]=0;
@@ -1598,8 +1597,8 @@ void Roptimal(int *R_K, int *R_n, int *R_numparents,
   now=time(NULL); //fprintf(mainoutputfile,"The time is now %s",ctime(&now));
   
   // Now let's draw the trees and compute their entropies.  
-  outputtreefile=fopen(outputtreefilename,"w");
-  outputclusterfile=fopen(outputclusterfilename,"w");
+  //outputtreefile=fopen(outputtreefilename,"w");
+  //outputclusterfile=fopen(outputclusterfilename,"w");
   
   clusterweights=(float *) malloc ((1+K)*sizeof(float)); assert(clusterweights!=NULL);
   //fprintf(mainoutputfile,"\n");

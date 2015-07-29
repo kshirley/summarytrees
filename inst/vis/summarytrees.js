@@ -1,18 +1,25 @@
+//234567890123456789012345678901234567890123456789012345678901234567890123456789
 // set up some global variables
 var margin = {top: 50, right: 50, bottom: 50, left: 50};
-var width = 1000;
-var height = 1200;
+var tree_width = 800;
+var tree_height = 500;
+var svg_width = 3000;
+var svg_height = 5000;
 var basetree;
 var basedata;
 var root;
 var old_tree; 
 var current_tree;
 var new_location;
-var fixed_depth = 200;
+var fixed_depth = 200; // depth of each level in pixels
+var max_bar_width = 100; // width of legend (and max width of nodes)
+var sep_sibling = 2;
+var sep_nonsibling = 3;
 var current_k;
 var old_k = 1; 
 var min_k = 1; 
 var max_k;
+var node_height = 12;
 
 // To display the value of k in the box on the webpage:
 function set_k(new_k) {
@@ -20,7 +27,7 @@ function set_k(new_k) {
   document.getElementById("newk").value = current_k;
 }
 
-// Set the divisor to control width (note: figure out what I was doing here)
+// Set the divisor to control node widths
 var divisor;
 d3.json("divisor.json", function(error, json) {
   divisor = json;
@@ -33,8 +40,8 @@ d3.json("divisor.json", function(error, json) {
 var maxPrint;
 
 var vis = d3.select("#summarytree-drawing").append("svg:svg")
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom)
+  .attr("width", svg_width + margin.left + margin.right)
+  .attr("height", svg_height + margin.top + margin.bottom)
   .append("svg:g")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -42,8 +49,8 @@ var vis = d3.select("#summarytree-drawing").append("svg:svg")
 vis.append("rect")
   .attr("x", 0)
   .attr("y", 0)
-  .attr("width", width)
-  .attr("height", height)
+  .attr("width", svg_width)
+  .attr("height", svg_height)
   .attr("fill", "black")
   .attr("fill-opacity", 0.10)
   .attr("stroke", "black")
@@ -54,16 +61,18 @@ vis.append("rect")
 vis.append("rect")
   .attr("x", -margin.left)
   .attr("y", -margin.top)
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom)
+  .attr("width", svg_width + margin.left + margin.right)
+  .attr("height", svg_height + margin.top + margin.bottom)
   .attr("fill", "black")
   .attr("fill-opacity", 0.05);
 
-var tree = d3.layout.tree()
-  .size([height - 20, width])
-//.attr("transform", "translate(" + 20 + "," + 0 + ")");
-//.separation(function(a, b) { return (a.parent == b.parent ? 1 : 2) / a.depth; });
-  .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2); });
+// not necessary to initialize this variable outside the updateTree() function
+//var tree;
+// = d3.layout.tree()
+  //.separation(function(a, b) {
+  //  return (a.parent == b.parent ? sep_sibling : sep_nonsibling);
+  //});
+  //.size([height - 20, width]);
 
 var diagonal = d3.svg.diagonal()
   .projection(function(d) { return [d.y, d.x]; });
@@ -89,11 +98,10 @@ function build(d, k, data) {
   if (d._children) {
 	  var numchildren = 0;
 	  for (var j = 0; j < d._children.length; j++) {
-	    if (data[k-1][d._children[j].name] == 1) {
-		    if (d.children == null) { 
+	    if (data[k - 1][d._children[j].name] == 1) {
+		    if (d.children == null) { // initialize children if none exist
 		      d.children = []; 
 		    };
-		    //debugger;
 		    d.children.push(d._children[j]);
 		    d.children[numchildren].size = data[max_k + k - 1][d._children[j].name];
 		    d.children[numchildren].label = data[2*max_k + k - 1][d._children[j].name] + " (" + data[max_k + k - 1][d._children[j].name] + ")";
@@ -131,7 +139,8 @@ function computeTree(v) {
   return st;
 }
 
-// compute the nearest ancestor in the old tree, and it will transition from this ancestor's old location
+// compute the nearest ancestor in the old tree, and it will transition 
+// from this ancestor's old location
 function enterAncestor_xy(d) {
   var a, ancest, temp;
   if (d.name != "1") {
@@ -147,7 +156,8 @@ function enterAncestor_xy(d) {
   return ancest;
 }
 
-// compute the nearest ancestor in the new tree, and the exiting node will transition to this ancestor's new location
+// compute the nearest ancestor in the new tree, and the exiting node will 
+// transition to this ancestor's new location
 function exitAncestor_xy(d) {
   var a, ancest, temp;
   if (d.name != "1"){
@@ -171,9 +181,9 @@ d3.json("basetree.json", function(error, json) {
     // and store them as "_children" (collapsed):
     root = json;
     baseAll(root);
-    root.x0 = height/2;
+    root.x0 = 0;
     root.y0 = 0;
-    root.label = "flare";
+    root.label = data[2*data.length/3][1];
     root.size = 0;
 
     // set up a copy of root called basetree:
@@ -182,18 +192,19 @@ d3.json("basetree.json", function(error, json) {
 
     // save the baseline data as a global variable:
     basedata = data;
+    //debugger;
 
     AddLegend();
 
     maxPrint = vis.append("text")
-      .attr("x", 100)
+      .attr("x", max_bar_width)
       .attr("y", -5)
       .attr("transform", function(d) { return "translate(0)"; })
       .attr("text-anchor", "start")
       .attr("stroke", "black")
       .attr("stroke-width", 0.5)
       .style("fill-opacity", 1)
-      .text(Math.max(divisor[current_k - 1]*100))
+      .text(Math.max(divisor[current_k - 1]*max_bar_width))
       .style("font", "10px sans-serif")
       .attr("text-anchor", "end");
     
@@ -207,9 +218,9 @@ function AddLegend() {
     .attr("x", 0)
     .attr("y", -30)
     .attr("height", 10)
-    .attr("width", 100)
-    .attr("fill", "#6699cc")
-    .attr("stroke", "#6699cc");
+    .attr("width", max_bar_width)
+    .attr("fill", "#9ecae1")
+    .attr("stroke", "#9ecae1");
 
   vis.append("text")
     .attr("x", 0)
@@ -251,10 +262,18 @@ d3.select("#decrease_k").on("click", function() {
 function updateTree() {
 
   tree = d3.layout.tree()
-    .size([10 + 12.03*current_k, width])
-  //.attr("transform", "translate(" + 20 + "," + 0 + ")");
-  //.separation(function(a, b) { return (a.parent == b.parent ? 1 : 2) / a.depth; });
-    .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2); });
+    .separation(function(a, b) { 
+      return (a.parent == b.parent ? sep_sibling : sep_nonsibling); 
+    })
+    //.size([10 + 12.03*current_k, width]);
+    //.size([tree_height, tree_width]);
+    .nodeSize([12, 150]);
+
+  // note above that the tree height is a mysterious function of current_k
+  // this was just an empirical formula that worked well in a few examples
+  // Q: Is there a simple way to compute how many nodes get stacked up
+  // in a given tree? This should determine height, but it's 
+  // complicated because of the different number of nodes at each level
 
   var duration = d3.event && d3.event.altKey ? 5000 : 800;
 
@@ -263,10 +282,39 @@ function updateTree() {
 
   // Compute the new tree layout
   current_tree = computeTree(current_k);
+
+  // add in the information for the root:
+  current_tree.size = basedata[max_k + current_k - 1]["1"];
+  current_tree.label = basedata[2*max_k + current_k - 1]["1"] + " (" + 
+    basedata[max_k + current_k - 1]["1"] + ")";
   var nodes = tree.nodes(current_tree);
 
+  // Shift everything down:
+  var zz = [];
+  var shift = 0;
+  nodes.forEach(function(d) { 
+    if (d.x < shift) {
+      shift = d.x;
+    }
+    zz.push(d.x);
+  });
+
+  nodes.forEach(function(d) {
+    d.x = d.x - shift + node_height/2;
+  });
+
+  debugger;
+
+  // Correct for k = 1. For some reason the node size was always zero, 
+  // instead of the sum of the weights of the whole tree.
+  // This is a temporary hack to get the node size and label correct.
+  //if (current_k == 1) {
+  //  nodes[0].size = basedata[basedata.length/3][1];
+  //  nodes[0].label = nodes[0].label + " (" + nodes[0].size + ")";
+  //};
+
   // Normalize for fixed-depth.
-  nodes.forEach(function(d) { d.y = d.depth * fixed_depth; });
+  //nodes.forEach(function(d) { d.y = d.depth * fixed_depth; });
 
   // stash the (x,y)-locations of the new nodes in an array:
   new_location = {};
@@ -280,7 +328,7 @@ function updateTree() {
   var old_nodes = tree.nodes(old_tree);
 
   // Normalize for fixed-depth.
-  old_nodes.forEach(function(d) { d.y = d.depth * fixed_depth; });
+  //old_nodes.forEach(function(d) { d.y = d.depth * fixed_depth; });
 
   // set an object to refer to the old nodes by name:
   var old_names = {};
@@ -315,8 +363,8 @@ function updateTree() {
     .attr("height", 1e-6)
     .attr("width", 1e-6)
     .attr("x", 0)
-    .attr("y", -5)
-  //.style("fill", "lightsteelblue");
+    .attr("y", -node_height/2)
+    .style("fill", "#9ecae1");
 
   nodeEnter.append("svg:text")
     .attr("x", function(d) {
@@ -339,7 +387,6 @@ function updateTree() {
       }
       return anchor;
     })
-  //.attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
     .text(function(d) { return d.label; })
     .style("fill-opacity", 1e-6);
 
@@ -351,11 +398,11 @@ function updateTree() {
     });
 
   nodeUpdate.select("rect")
-    .attr("height", 10)
+    .attr("height", node_height)
     .attr("width", function(d) { return d.size/divisor[current_k - 1] ; })
     .attr("x", 0)
-    .attr("y", -5)
-  //.style("fill", "lightsteelblue");
+    .attr("y", -node_height/2)
+    .style("fill", "#9ecae1");
 
   nodeUpdate.select("text")
     .attr("x", function(d) {
@@ -381,19 +428,21 @@ function updateTree() {
     .text(function(d) { return d.label; })
     .style("fill-opacity", 1);
 
-  // Transition exiting nodes to the new position of their most recent ancestor in the new tree:
+  // Transition exiting nodes to the new position of their most recent 
+  //ancestor in the new tree:
   var nodeExit = node.exit().transition()
     .duration(duration)
     .attr("transform", function(d) { 
-      var ac = exitAncestor_xy(d); // this function calls the global variable new_locations
+      // this function calls the global variable new_locations
+      var ac = exitAncestor_xy(d);
       return "translate(" + ac[1] + "," + ac[0] + ")"; 
     })
     .remove();
-
+  
   nodeExit.select("rect")
     .attr("height", 1e-6)
     .attr("width", 1e-6);
-
+  
   nodeExit.select("text")
     .style("fill-opacity", 1e-6);
 
@@ -418,7 +467,7 @@ function updateTree() {
     .duration(duration)
     .attr("d", diagonal);
 
-  // Transition exiting nodes
+  // Transition exiting links:
   link.exit().transition()
     .duration(duration)
     .attr("d", function(d) {
@@ -440,14 +489,14 @@ function updateTree() {
   maxPrint.remove();
   
   maxPrint = vis.append("text")
-    .attr("x", 100)
+    .attr("x", max_bar_width)
     .attr("y", -5)
     .attr("transform", function(d) { return "translate(0)"; })
     .attr("text-anchor", "start")
     .attr("stroke", "black")
     .attr("stroke-width", 0.5)
     .style("fill-opacity", 1)
-    .text(Math.floor(divisor[current_k - 1]*100))
+    .text(Math.floor(divisor[current_k - 1]*max_bar_width))
     .style("font", "10px sans-serif")
     .attr("text-anchor", "end");
 }

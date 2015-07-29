@@ -86,7 +86,7 @@ Notes:
 
 - We also need to think about whether the current tie-breakers are enough to define a unique, canonical version of a tree. I think not. If two sibling nodes have the same size and label, they are indistinguishable by the `order.nodes()` function, but their subtrees may have very different structures.
 
-- Is there an off-the-shelf solution for (1) verifying that a given input structure is, indeed, a rooted, node-weighted tree, and (2) computing a stable version of that tree?
+- Is there an off-the-shelf solution for (1) verifying that a given input structure is, indeed, a rooted, node-weighted tree, and (2) computing a stable version of that tree, or a so-called 'canonical' version of it?
 
 ## Maximum Entropy Summary Trees
 
@@ -98,7 +98,7 @@ g <- greedy(node = flare[, "node"],
             parent = flare[, "parent"], 
             weight = flare[, "weight"], 
             label = flare[, "label"], 
-            K = 20)
+            K = 100)
 ```
 
 
@@ -109,7 +109,7 @@ e <- optimal(node = flare[, "node"],
              parent = flare[, "parent"], 
              weight = flare[, "weight"], 
              label = flare[, "label"], 
-             K = 20, 
+             K = 100, 
              epsilon = 0)
 t2 <- Sys.time()
 t2 - t1
@@ -123,7 +123,7 @@ a <- optimal(node = flare[, "node"],
              parent = flare[, "parent"], 
              weight = flare[, "weight"], 
              label = flare[, "label"], 
-             K = 20, 
+             K = 100, 
              epsilon = 0.1)
 t2 <- Sys.time()
 t2 - t1
@@ -146,6 +146,29 @@ The approximate algorithm is guaranteed to return a summary tree whose entropy i
 The main reason to compute maximum entropy summary trees is to visualize them, and the visuzlizaiton is more powerful when one can interactively transition among the $k$-node summary trees for $k = 1, ..., K$, where typically, $50 \leq K \leq 500$.
 
 In this section we show how the `summarytrees` package can be used to construct a web-based interactive visualization using d3.js.
+
+The `d3tree()` function takes five arguments:
+
+1. The first one, `tree.list`, is the list of $K$ summary trees that were computed by either `greedy()` or `optimal()`.
+
+2. The second argument, `out.dir`, is the directory from which to serve the browser-based visualization.
+
+3. `open.browser`
+
+4. `labels` is a character vector of length $n$ the contains the labels of all the nodes in the original tree.
+
+5. `tree` is the matrix that is output by `order.nodes()` that contains the list of all unique parents in the tree, and the sequence of indices of each of their respective child nodes.
+
+We call the function `d3tree()` below and our default browser opens and shows the interactive visualization:
+
+```{r d3tree}
+d3tree(tree.list = e, 
+       out.dir = tempfile(), 
+       open.browser = interactive(), 
+       labels = tmp$data[, "label"], 
+       tree = tmp$tree)
+```
+
 
 
 

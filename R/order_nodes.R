@@ -45,6 +45,7 @@ order.nodes <- function(node = integer(), parent = integer(),
                         weight = numeric(), label = character()) {
 
   # Check the inputs:
+  n <- length(node)
   if (any(duplicated(node))) {
   	stop("Error: Each element of 'node' must be unique")
   }
@@ -55,7 +56,6 @@ order.nodes <- function(node = integer(), parent = integer(),
   	stop("Error: Exactly one element of 'parent' must be equal to zero, and
   	     this element must correspond to the root node.")
   }
-  n <- length(node)
   if (length(parent) != n) {
     stop("Error: The length of 'parent' is not equal to the length of 'node'")
   }
@@ -78,7 +78,8 @@ order.nodes <- function(node = integer(), parent = integer(),
   current.level <- 1
   level[which(parent == 0)] <- current.level
   n.zero <- sum(level == 0)
-  while (n.zero > 0){
+  print("Computing node levels")
+  while (n.zero > 0) {
     current.level <- current.level + 1
     level[parent %in% node[level == current.level - 1]] <- current.level
     n.zero <- sum(level == 0)
@@ -93,30 +94,51 @@ order.nodes <- function(node = integer(), parent = integer(),
   # here we re-order the whole data each time, for each level
   # probably only need to do this for the nodes at a given level
   # come back later to improve this (to speed it up)
-  for (i in 1:D) {
-    # re-order rows of data
-    data <- data[order(data[, "level"],
-                       data[, "parent"],
-                       data[, "weight"],
-                       data[, "label"]), ]
-    # re-number the nodes
-    data[, "parent"] <- match(data[, "parent"], data[, "node"])
-    data[, "node"] <- 1:n
-    data[1, "parent"] <- 0
-  }
+  o <- do.call(order, data[, c(5, 2, 3, 4)])
+  data <- data[o, ]
+  data[, "parent"] <- match(data[, "parent"], data[, "node"])
+  data[, "node"] <- 1:n
+  data[1, "parent"] <- 0
   rownames(data) <- 1:n
 
+  #for (i in 1:D) {
+    #print(paste0("Sorting level ", i))
+    ## re-order rows of data
+    #data <- data[order(data[, "level"],
+    #                   data[, "parent"],
+    #                   data[, "weight"],
+    #                   data[, "label"]), ]
+    ## re-number the nodes
+    #data[, "parent"] <- match(data[, "parent"], data[, "node"])
+    #data[, "node"] <- 1:n
+    #data[1, "parent"] <- 0
+  #}
+  #rownames(data) <- 1:n
+
   # compute children:
-  first.child <- numeric(n)
-  last.child <- numeric(n)
-  for (i in sort(unique(data[, "parent"])[-1])){
-    first.child[i] <- min(which(data[, "parent"] == i))
-    last.child[i] <- max(which(data[, "parent"] == i))
-  }
+  print("Computing child indices for each parent")
+  #first.child <- numeric(n)
+  #last.child <- numeric(n)
+  #a <- aggregate(data[, "node"], by = list(data[, "parent"]), FUN = min)
+  #b <- aggregate(data[, "node"], by = list(data[, "parent"]), FUN = max)
+  #first.child[a[-1, 1]] <- a[-1, 2]
+  #last.child[b[-1, 1]] <- b[-1, 2]
+  #for (i in sort(unique(data[, "parent"])[-1])){
+  #  first.child[i] <- min(which(data[, "parent"] == i))
+  #  last.child[i] <- max(which(data[, "parent"] == i))
+  #}
+
+  d <- diff(data[, "parent"])
+  w <- which(d != 0)
+  parent.vector <- unique(data[, "parent"])[-1]
+  first.child <- (2:n)[w]
+  last.child <- (2:n)[c(w[2:length(w)], n) - 1]
+  tree <- cbind(parent.vector, first.child, last.child)
+  tree <- tree[order(tree[, 1]), ]
 
   # gather into a data.frame called "child.index":
-  tree <- cbind(sort(unique(data[, "parent"]))[-1],
-                first.child[first.child != 0],
-                last.child[last.child != 0])
+  #tree <- cbind(sort(unique(data[, "parent"]))[-1],
+  #              first.child[first.child != 0],
+  #              last.child[last.child != 0])
   return(list(tree = tree, data = data))
 }

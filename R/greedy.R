@@ -143,5 +143,8 @@ greedy <- function(node = integer(), parent = integer(), weight = numeric(),
     rownames(final[[k]]) <- 1:k
     final[[k]][final[[k]][, "type"] == 3, 1] <- NA
   }
-  return(final)
+  return(list(data = data, tree = tree, summary.trees = final))
 }
+
+
+

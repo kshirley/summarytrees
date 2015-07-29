@@ -82,16 +82,19 @@ optimal <- function(node = integer(), parent = integer(), weight = numeric(),
   # check that the weights are non-negative:
   if (any(weight < 0)) stop("Error: All weights must be non-negative.")
 
-  # check that the weights are non-negative:
+  # check that epsilon is non-negative:
   if (epsilon < 0) stop("Error: epsilon must be greater than or equal to zero.")
+
+  # check that if epsilon=0, the weights are integers:
+  if (epsilon == 0 & !all(weight == floor(weight))) {
+    stop("Error: When epsilon = 0, all weights must be integers.")
+  }
 
   # collect some variables and force types:
   numparents <- as.integer(dim(tree)[1])
   childindex <- as.integer(tree[, 1])
   childstart <- as.integer(tree[, 2])
   childend <- as.integer(tree[, 3])
-
-  #install("~/Git/summarytrees/")
 
   # Run the C function:
   tmp <- capture.output(.C("Roptimal",
@@ -141,5 +144,5 @@ optimal <- function(node = integer(), parent = integer(), weight = numeric(),
     rownames(final[[k]]) <- 1:k
     final[[k]][final[[k]][, "type"] == 3, 1] <- NA
   }
-  return(final)
+  return(list(data = data, tree = tree, summary.trees = final))
 }

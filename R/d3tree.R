@@ -29,7 +29,6 @@ d3tree <- function(tree.list, out.dir = tempfile(),
   file.copy(to.copy, out.dir, overwrite = TRUE, recursive = TRUE)
 
   # for now call tree.list (the length-K list of summary trees) 'g'
-  g <- tree.list
   K <- length(tree.list)
   gather.edges <- function(x) {
     tmp <- x[-1, 2:1]
@@ -37,8 +36,8 @@ d3tree <- function(tree.list, out.dir = tempfile(),
     names(tmp) <- c("parent.vec", "child.vec")
     tmp
   }
-  y <- c(NA, lapply(g[-1], gather.edges))
-  x <- lapply(g, function(x) x[, "weight"])
+  y <- c(NA, lapply(tree.list[-1], gather.edges))
+  x <- lapply(tree.list, function(x) x[, "weight"])
   mat <- as.matrix(do.call(rbind, y[-1]), rownames.force = FALSE)
 
   # Now just the unique edges:
@@ -73,7 +72,7 @@ d3tree <- function(tree.list, out.dir = tempfile(),
   node.labels <- matrix("", K, l)
   node.exists <- matrix(0, K, l)
   node.weights <- matrix(0, K, l)
-  for (k in 2:K){
+  for (k in 2:K) {
     # compute the size:
     o <- match(paste(y[[k]][, 1], y[[k]][, 2], sep = "-"),
                paste(u[, 1], u[, 2], sep = "-"))
@@ -159,7 +158,7 @@ d3tree <- function(tree.list, out.dir = tempfile(),
       while(root != 1){
         current.level <- current.level + 1
         node <- root
-        root <- y[[k]][y[[k]][, 2]==node, 1][1]
+        root <- y[[k]][y[[k]][, 2] == node, 1][1]
       }
       level[j] <- current.level
     }
@@ -174,11 +173,11 @@ d3tree <- function(tree.list, out.dir = tempfile(),
   # pre-compute divisor to keep all node widths less than 100 pixels:
   divisor <- numeric(K)
   for (k in 2:K) divisor[k] <- max(size.range[[k]])/100
-  divisor <- round(divisor)
+  #divisor <- ceiling(divisor)
   divisor[1] <- divisor[2]
 
-  new.out <- cbind(out, divisor = c(divisor, rep(0, 2*K)))
-  write.csv(new.out, file = file.path(out.dir, "info.csv"),
+  #new.out <- cbind(out, divisor = c(divisor, rep(0, 2*K)))
+  write.csv(out, file = file.path(out.dir, "info.csv"),
             row.names = FALSE, quote = FALSE)
 
   #max.flare <- 1000
@@ -187,7 +186,6 @@ d3tree <- function(tree.list, out.dir = tempfile(),
   #for (i in 1:K) cat(div.cat[i], sep = ",")
   div.cat <- divisor
   cat(toJSON(div.cat), "\n", file = file.path(out.dir, "divisor.json"))
-  #cat(toJSON(div.cat), file = "~/Git/summarytrees/inst/vis/divisor.json")
 
   servd <- requireNamespace('servr')
   if (open.browser) {
