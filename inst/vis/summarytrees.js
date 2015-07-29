@@ -20,12 +20,72 @@ var old_k = 1;
 var min_k = 1; 
 var max_k;
 var node_height = 12;
+var legend_color = "#43a2ca";
+var maxPrint;
+
+
+// set up div for all ways to input a new value of k:
+var topdiv = document.createElement("div");
+topdiv.setAttribute("class", "topdiv");
+document.getElementById("summarytree-drawing").appendChild(topdiv);
+
+var kdiv = document.createElement("div");
+kdiv.innerHTML = "Enter # of nodes in summary tree: k = ";
+topdiv.appendChild(kdiv);
+
+var ktextbox = document.createElement("input");
+ktextbox.setAttribute("type", "text");
+ktextbox.setAttribute("id", "newk");
+ktextbox.setAttribute("size", "4");
+kdiv.appendChild(ktextbox);
+
+var ktextsubmit = document.createElement("button");
+ktextsubmit.setAttribute("class", "kbutton");
+ktextsubmit.setAttribute("id", "ksubmit");
+ktextsubmit.innerHTML = "Submit";
+kdiv.appendChild(ktextsubmit);
+
+var decreaseButton = document.createElement("button");
+decreaseButton.setAttribute("class", "kbutton");
+decreaseButton.setAttribute("id", "decrease_k");
+decreaseButton.innerHTML = "k--";
+kdiv.appendChild(decreaseButton);
+
+var increaseButton = document.createElement("button");
+increaseButton.setAttribute("class", "kbutton");
+increaseButton.setAttribute("id", "increase_k");
+increaseButton.innerHTML = "k++";
+kdiv.appendChild(increaseButton);
 
 // To display the value of k in the box on the webpage:
 function set_k(new_k) {
   current_k = new_k;
   document.getElementById("newk").value = current_k;
 }
+
+// function to read in the value of k from the form
+// and draw the corresponding k-node summary tree
+d3.select("#ksubmit").on("click", function() {
+  var new_k = Math.floor(+document.getElementById("newk").value);
+  if (isNaN(new_k))
+    return false;
+  set_k(Math.max(min_k, Math.min(max_k, new_k)));    
+  updateTree();
+  return false;
+});
+
+// increment k button/link:
+d3.select("#increase_k").on("click", function() {
+  set_k(Math.min(current_k + 1, max_k));
+  updateTree();
+});
+
+// decrement k button/link:
+d3.select("#decrease_k").on("click", function() {
+  set_k(Math.max(current_k - 1, min_k));
+  updateTree();
+});
+
 
 // Set the divisor to control node widths
 var divisor;
@@ -36,8 +96,6 @@ d3.json("divisor.json", function(error, json) {
   // k = 20 is the default initial value (restricted to be between 1 and K):
   set_k(Math.max(min_k, Math.min(max_k, 20)));    
 });
-
-var maxPrint;
 
 var vis = d3.select("#summarytree-drawing").append("svg:svg")
   .attr("width", svg_width + margin.left + margin.right)
@@ -65,14 +123,6 @@ vis.append("rect")
   .attr("height", svg_height + margin.top + margin.bottom)
   .attr("fill", "black")
   .attr("fill-opacity", 0.05);
-
-// not necessary to initialize this variable outside the updateTree() function
-//var tree;
-// = d3.layout.tree()
-  //.separation(function(a, b) {
-  //  return (a.parent == b.parent ? sep_sibling : sep_nonsibling);
-  //});
-  //.size([height - 20, width]);
 
 var diagonal = d3.svg.diagonal()
   .projection(function(d) { return [d.y, d.x]; });
@@ -121,16 +171,6 @@ function buildAll(d, k, data) {
   }
 }
 
-// function to read in the value of k from the form
-// and draw the corresponding k-node summary tree
-function changek(event){
-  var new_k = Math.floor(+document.getElementById("newk").value); // ~~
-  if (isNaN(new_k))
-    return false;
-  set_k(Math.max(min_k, Math.min(max_k, new_k)));    
-  updateTree();
-  return false;
-}
 
 // draw a tree given the json, data, and value of k:
 function computeTree(v) {
@@ -192,26 +232,15 @@ d3.json("basetree.json", function(error, json) {
 
     // save the baseline data as a global variable:
     basedata = data;
-    //debugger;
 
     AddLegend();
 
-    maxPrint = vis.append("text")
-      .attr("x", max_bar_width)
-      .attr("y", -5)
-      .attr("transform", function(d) { return "translate(0)"; })
-      .attr("text-anchor", "start")
-      .attr("stroke", "black")
-      .attr("stroke-width", 0.5)
-      .style("fill-opacity", 1)
-      .text(Math.max(divisor[current_k - 1]*max_bar_width))
-      .style("font", "10px sans-serif")
-      .attr("text-anchor", "end");
-    
     updateTree();
 
   });
 });
+
+
 
 function AddLegend() {
   var legend = vis.append("rect")
@@ -219,43 +248,40 @@ function AddLegend() {
     .attr("y", -30)
     .attr("height", 10)
     .attr("width", max_bar_width)
-    .attr("fill", "#9ecae1")
-    .attr("stroke", "#9ecae1");
+    .attr("fill", "#43a2ca")
+    .attr("stroke", "#43a2ca");
 
   vis.append("text")
+    .attr("class", "legend_text")
     .attr("x", 0)
     .attr("y", -35)
     .attr("transform", function(d) { return "translate(0)"; })
     .attr("text-anchor", "start")
-    .attr("stroke", "black")
     .attr("stroke-width", 0.5)
     .style("fill-opacity", 1)
-    .text("Size Legend (kb)")
-    .style("font", "10px sans-serif");
+    .text("Size Legend (kb)");
 
   vis.append("text")
+    .attr("class", "legend_text")
     .attr("x", 0)
     .attr("y", -5)
     .attr("transform", function(d) { return "translate(0)"; })
     .attr("text-anchor", "start")
-    .attr("stroke", "black")
     .attr("stroke-width", 0.5)
     .style("fill-opacity", 1)
-    .text("0")
-    .style("font", "10px sans-serif");
+    .text("0");
+  
+  maxPrint = vis.append("text")
+    .attr("class", "legend_text")
+    .attr("x", max_bar_width)
+    .attr("y", -5)
+    .attr("transform", function(d) { return "translate(0)"; })
+    .attr("text-anchor", "start")
+    .attr("stroke-width", 0.5)
+    .style("fill-opacity", 1)
+    .text(Math.max(divisor[current_k - 1]*max_bar_width))
+    .attr("text-anchor", "end");
 }
-
-// increment k button/link:
-d3.select("#increase_k").on("click", function() {
-  set_k(Math.min(current_k + 1, max_k));
-  updateTree();
-});
-
-// decrement k button/link:
-d3.select("#decrease_k").on("click", function() {
-  set_k(Math.max(current_k - 1, min_k));
-  updateTree();
-});
 
 
 // re-draw the tree for the new value of k:
@@ -265,17 +291,15 @@ function updateTree() {
     .separation(function(a, b) { 
       return (a.parent == b.parent ? sep_sibling : sep_nonsibling); 
     })
-    //.size([10 + 12.03*current_k, width]);
-    //.size([tree_height, tree_width]);
-    .nodeSize([12, 150]);
+    .nodeSize([12, 150]); // [height, width]
+  // setting .nodeSize() means that tree.size() will be ignored
+  // using tree.size() sets the size of the whole tree, and the 
+  // content will automatically be squeezed inside this region.
+  // tree.size() keeps the vis compact but for K > about 100, the nodes
+  // typically start to overlap if the region is a single screen.
 
-  // note above that the tree height is a mysterious function of current_k
-  // this was just an empirical formula that worked well in a few examples
-  // Q: Is there a simple way to compute how many nodes get stacked up
-  // in a given tree? This should determine height, but it's 
-  // complicated because of the different number of nodes at each level
-
-  var duration = d3.event && d3.event.altKey ? 5000 : 800;
+  // duration of transitions:
+  var duration = d3.event && d3.event.altKey ? 5000 : 600;
 
   // Stash the incoming tree as the global variable old_tree:
   old_tree = current_tree;
@@ -290,31 +314,16 @@ function updateTree() {
   var nodes = tree.nodes(current_tree);
 
   // Shift everything down:
-  var zz = [];
   var shift = 0;
   nodes.forEach(function(d) { 
     if (d.x < shift) {
       shift = d.x;
     }
-    zz.push(d.x);
   });
 
   nodes.forEach(function(d) {
     d.x = d.x - shift + node_height/2;
   });
-
-  debugger;
-
-  // Correct for k = 1. For some reason the node size was always zero, 
-  // instead of the sum of the weights of the whole tree.
-  // This is a temporary hack to get the node size and label correct.
-  //if (current_k == 1) {
-  //  nodes[0].size = basedata[basedata.length/3][1];
-  //  nodes[0].label = nodes[0].label + " (" + nodes[0].size + ")";
-  //};
-
-  // Normalize for fixed-depth.
-  //nodes.forEach(function(d) { d.y = d.depth * fixed_depth; });
 
   // stash the (x,y)-locations of the new nodes in an array:
   new_location = {};
@@ -326,9 +335,6 @@ function updateTree() {
 
   // compute the locations of the old nodes:
   var old_nodes = tree.nodes(old_tree);
-
-  // Normalize for fixed-depth.
-  //old_nodes.forEach(function(d) { d.y = d.depth * fixed_depth; });
 
   // set an object to refer to the old nodes by name:
   var old_names = {};
@@ -364,7 +370,7 @@ function updateTree() {
     .attr("width", 1e-6)
     .attr("x", 0)
     .attr("y", -node_height/2)
-    .style("fill", "#9ecae1");
+    .style("fill", "#43a2ca");
 
   nodeEnter.append("svg:text")
     .attr("x", function(d) {
@@ -402,7 +408,7 @@ function updateTree() {
     .attr("width", function(d) { return d.size/divisor[current_k - 1] ; })
     .attr("x", 0)
     .attr("y", -node_height/2)
-    .style("fill", "#9ecae1");
+    .style("fill", "#43a2ca");
 
   nodeUpdate.select("text")
     .attr("x", function(d) {
@@ -486,18 +492,7 @@ function updateTree() {
   // set the old_k to the current_k:
   old_k = current_k;
   
-  maxPrint.remove();
-  
-  maxPrint = vis.append("text")
-    .attr("x", max_bar_width)
-    .attr("y", -5)
-    .attr("transform", function(d) { return "translate(0)"; })
-    .attr("text-anchor", "start")
-    .attr("stroke", "black")
-    .attr("stroke-width", 0.5)
-    .style("fill-opacity", 1)
-    .text(Math.floor(divisor[current_k - 1]*max_bar_width))
-    .style("font", "10px sans-serif")
-    .attr("text-anchor", "end");
+  // print the value of the bar width in the legend:
+  maxPrint.text(Math.round(Math.max(divisor[current_k - 1]*max_bar_width)));
 }
 
