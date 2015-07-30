@@ -22,108 +22,9 @@ var max_k;
 var node_height = 12;
 var legend_color = "#43a2ca";
 var maxPrint;
-
-
-// set up div for all ways to input a new value of k:
-var topdiv = document.createElement("div");
-topdiv.setAttribute("class", "topdiv");
-document.getElementById("summarytree-drawing").appendChild(topdiv);
-
-var kdiv = document.createElement("div");
-kdiv.innerHTML = "Enter # of nodes in summary tree: k = ";
-topdiv.appendChild(kdiv);
-
-var ktextbox = document.createElement("input");
-ktextbox.setAttribute("type", "text");
-ktextbox.setAttribute("id", "newk");
-ktextbox.setAttribute("size", "4");
-kdiv.appendChild(ktextbox);
-
-var ktextsubmit = document.createElement("button");
-ktextsubmit.setAttribute("class", "kbutton");
-ktextsubmit.setAttribute("id", "ksubmit");
-ktextsubmit.innerHTML = "Submit";
-kdiv.appendChild(ktextsubmit);
-
-var decreaseButton = document.createElement("button");
-decreaseButton.setAttribute("class", "kbutton");
-decreaseButton.setAttribute("id", "decrease_k");
-decreaseButton.innerHTML = "k--";
-kdiv.appendChild(decreaseButton);
-
-var increaseButton = document.createElement("button");
-increaseButton.setAttribute("class", "kbutton");
-increaseButton.setAttribute("id", "increase_k");
-increaseButton.innerHTML = "k++";
-kdiv.appendChild(increaseButton);
-
-// To display the value of k in the box on the webpage:
-function set_k(new_k) {
-  current_k = new_k;
-  document.getElementById("newk").value = current_k;
-}
-
-// function to read in the value of k from the form
-// and draw the corresponding k-node summary tree
-d3.select("#ksubmit").on("click", function() {
-  var new_k = Math.floor(+document.getElementById("newk").value);
-  if (isNaN(new_k))
-    return false;
-  set_k(Math.max(min_k, Math.min(max_k, new_k)));    
-  updateTree();
-  return false;
-});
-
-// increment k button/link:
-d3.select("#increase_k").on("click", function() {
-  set_k(Math.min(current_k + 1, max_k));
-  updateTree();
-});
-
-// decrement k button/link:
-d3.select("#decrease_k").on("click", function() {
-  set_k(Math.max(current_k - 1, min_k));
-  updateTree();
-});
-
-
-// Set the divisor to control node widths
 var divisor;
-d3.json("divisor.json", function(error, json) {
-  divisor = json;
-  // set K (called 'max_k' here):
-  max_k = divisor.length;
-  // k = 20 is the default initial value (restricted to be between 1 and K):
-  set_k(Math.max(min_k, Math.min(max_k, 20)));    
-});
 
-var vis = d3.select("#summarytree-drawing").append("svg:svg")
-  .attr("width", svg_width + margin.left + margin.right)
-  .attr("height", svg_height + margin.top + margin.bottom)
-  .append("svg:g")
-  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-// the dark gray rectangle defining the data plotting area:
-vis.append("rect")
-  .attr("x", 0)
-  .attr("y", 0)
-  .attr("width", svg_width)
-  .attr("height", svg_height)
-  .attr("fill", "black")
-  .attr("fill-opacity", 0.10)
-  .attr("stroke", "black")
-  .attr("stroke-opacity", 0.00);
-
-// the light gray rectangle defining the total plotting area
-// This includes room around the data plotting area for margin labels, etc.
-vis.append("rect")
-  .attr("x", -margin.left)
-  .attr("y", -margin.top)
-  .attr("width", svg_width + margin.left + margin.right)
-  .attr("height", svg_height + margin.top + margin.bottom)
-  .attr("fill", "black")
-  .attr("fill-opacity", 0.05);
-
+// I forget what this does...
 var diagonal = d3.svg.diagonal()
   .projection(function(d) { return [d.y, d.x]; });
 
@@ -171,7 +72,6 @@ function buildAll(d, k, data) {
   }
 }
 
-
 // draw a tree given the json, data, and value of k:
 function computeTree(v) {
   var st = JSON.parse(JSON.stringify(basetree));
@@ -213,30 +113,202 @@ function exitAncestor_xy(d) {
   return ancest;
 }
 
+// set up div for all inputs (text, buttons, slider) to change k:
+var topdiv = document.createElement("div");
+topdiv.setAttribute("class", "topdiv");
+document.getElementById("summarytree-drawing").appendChild(topdiv);
+
+var kdiv = document.createElement("div");
+kdiv.innerHTML = "Enter # of nodes in summary tree: k = ";
+kdiv.id = "text-plus-buttons";
+topdiv.appendChild(kdiv);
+
+var ktextbox = document.createElement("input");
+ktextbox.setAttribute("type", "text");
+ktextbox.setAttribute("id", "newk");
+ktextbox.setAttribute("size", "4");
+kdiv.appendChild(ktextbox);
+
+var ktextsubmit = document.createElement("button");
+ktextsubmit.setAttribute("class", "kbutton");
+ktextsubmit.setAttribute("id", "ksubmit");
+ktextsubmit.innerHTML = "Submit";
+kdiv.appendChild(ktextsubmit);
+
+var decreaseButton = document.createElement("button");
+decreaseButton.setAttribute("class", "kbutton");
+decreaseButton.setAttribute("id", "decrease_k");
+decreaseButton.innerHTML = "k--";
+kdiv.appendChild(decreaseButton);
+
+var increaseButton = document.createElement("button");
+increaseButton.setAttribute("class", "kbutton");
+increaseButton.setAttribute("id", "increase_k");
+increaseButton.innerHTML = "k++";
+kdiv.appendChild(increaseButton);
+
+var sliderWrapper = document.createElement("div");
+sliderWrapper.setAttribute("id", "lambdaInput");
+sliderWrapper.setAttribute("class", "slider");
+kdiv.appendChild(sliderWrapper);
+
+var sliderDiv = document.createElement("div");
+sliderDiv.setAttribute("id", "sliderdiv");
+sliderDiv.setAttribute("class", "sd");
+sliderWrapper.appendChild(sliderDiv);
+
+var sliderInput = document.createElement("input");
+sliderInput.setAttribute("class", "sliderinput");
+sliderInput.type = "range";
+sliderInput.id = "sliderButton";
+sliderDiv.appendChild(sliderInput);
+
+// Set up the plotting region for the legend + tree:
+var vis = d3.select("#summarytree-drawing").append("svg:svg")
+  .attr("width", svg_width + margin.left + margin.right)
+  .attr("height", svg_height + margin.top + margin.bottom)
+  .append("svg:g")
+  .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// the dark gray rectangle defining the data plotting area:
+vis.append("rect")
+  .attr("x", 0)
+  .attr("y", 0)
+  .attr("width", svg_width)
+  .attr("height", svg_height)
+  .attr("fill", "black")
+  .attr("fill-opacity", 0.10)
+  .attr("stroke", "black")
+  .attr("stroke-opacity", 0.00);
+
+// the light gray rectangle defining the total plotting area
+// This includes room around the data plotting area for margin labels, etc.
+vis.append("rect")
+  .attr("x", -margin.left)
+  .attr("y", -margin.top)
+  .attr("width", svg_width + margin.left + margin.right)
+  .attr("height", svg_height + margin.top + margin.bottom)
+  .attr("fill", "black")
+  .attr("fill-opacity", 0.05);
+
+
+// To display the value of k in the box on the webpage:
+function set_k(new_k) {
+  current_k = new_k;
+  document.getElementById("newk").value = current_k;
+}
+
 // read in the data:
-d3.json("basetree.json", function(error, json) {
-  d3.csv("info.csv", function(error, data) {
+d3.json("divisor.json", function(error, zzz) {
 
-    // remove the children from the base tree
-    // and store them as "_children" (collapsed):
-    root = json;
-    baseAll(root);
-    root.x0 = 0;
-    root.y0 = 0;
-    root.label = data[2*data.length/3][1];
-    root.size = 0;
+  divisor = zzz;
 
-    // set up a copy of root called basetree:
-    basetree = JSON.parse(JSON.stringify(root));
-    current_tree = basetree;
+  // set K (called 'max_k' here):
+  max_k = divisor.length;
 
-    // save the baseline data as a global variable:
-    basedata = data;
+  // k = 20 is the default initial value (restricted to be between 1 and K):
+  set_k(Math.max(min_k, Math.min(max_k, 20))); 
 
-    AddLegend();
+  d3.json("basetree.json", function(error, json) {
+    d3.csv("info.csv", function(error, data) {
 
-    updateTree();
+      // data-dependent values associated with the slider input:
+      sliderInput.min = 1;
+      sliderInput.max = max_k;
+      sliderInput.step = 1;
+      sliderInput.value = current_k;
 
+      // Create the svg to contain the slider scale:
+      var scaleContainer = d3.select("#sliderdiv").append("svg")
+	      .attr("width", 310)
+	      .attr("height", 25);
+
+      var sliderScale = d3.scale.linear()
+	      .domain([1, max_k])
+	      //.range([0, 300])
+	      .range([7.5, 292.5])
+        // trimmed by 10px on each side to align with slider button on ends
+	      .nice();
+
+      // adapted from http://bl.ocks.org/mbostock/1166403
+      var sliderAxis = d3.svg.axis()
+	      .scale(sliderScale)
+	      .orient("bottom")
+	      .tickSize(10)
+	      .tickSubdivide(true)
+	      .ticks(6);
+      
+      // group to contain the elements of the slider axis:
+      var sliderAxisGroup = scaleContainer.append("g")
+	      .attr("class", "slideraxis")
+	      .attr("margin-top", "0px")
+	      .call(sliderAxis);
+
+      // manually change the first slider axis tick label to "1":
+      d3.select("text")[0][0].innerHTML = "1";
+
+      // When the value of lambda changes, update the visualization
+      d3.select("#sliderButton")
+        .on("mouseup", function() {
+          var new_k = +this.value;
+          document.getElementById("newk").value = new_k;
+          if (isNaN(new_k))
+            return false;
+          set_k(Math.max(min_k, Math.min(max_k, new_k)));
+          updateTree();
+          return false;
+        });
+
+      // function to read in the value of k from the form
+      // and draw the corresponding k-node summary tree
+      d3.select("#ksubmit").on("click", function() {
+        var new_k = Math.floor(+document.getElementById("newk").value);
+        if (isNaN(new_k))
+          return false;
+        set_k(Math.max(min_k, Math.min(max_k, new_k)));    
+        // update slider to reflect new value of k:
+        document.getElementById("sliderButton").value = current_k;
+        updateTree();
+        return false;
+      });
+
+      // increment k button/link:
+      d3.select("#increase_k").on("click", function() {
+        set_k(Math.min(current_k + 1, max_k));
+        // update slider to reflect new value of k:
+        document.getElementById("sliderButton").value = current_k;
+        updateTree();
+      });
+
+      // decrement k button/link:
+      d3.select("#decrease_k").on("click", function() {
+        set_k(Math.max(current_k - 1, min_k));
+        // update slider to reflect new value of k:
+        document.getElementById("sliderButton").value = current_k;
+        updateTree();
+      });
+
+      // remove the children from the base tree
+      // and store them as "_children" (collapsed):
+      root = json;
+      baseAll(root);
+      root.x0 = 0;
+      root.y0 = 0;
+      root.label = data[2*data.length/3][1];
+      root.size = 0;
+
+      // set up a copy of root called basetree:
+      basetree = JSON.parse(JSON.stringify(root));
+      current_tree = basetree;
+
+      // save the baseline data as a global variable:
+      basedata = data;
+
+      AddLegend();
+
+      updateTree();
+
+    });
   });
 });
 
