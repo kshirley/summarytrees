@@ -1,8 +1,6 @@
 //234567890123456789012345678901234567890123456789012345678901234567890123456789
 // set up some global variables
 var margin = {top: 50, right: 50, bottom: 50, left: 50};
-var tree_width = 800;
-var tree_height = 500;
 var svg_width = 3000;
 var svg_height = 5000;
 var basetree;
@@ -11,15 +9,16 @@ var root;
 var old_tree; 
 var current_tree;
 var new_location;
-var fixed_depth = 200; // depth of each level in pixels
-var max_bar_width = 100; // width of legend (and max width of nodes)
+//var fixed_depth = 200; // depth of each level in pixels
+var legend_width; // width of legend (and max width of nodes)
+var node_width;
+var node_height;
 var sep_sibling = 2;
 var sep_nonsibling = 3;
 var current_k;
 var old_k = 1; 
 var min_k = 1; 
 var max_k;
-var node_height = 12;
 var legend_color = "#43a2ca";
 var maxPrint;
 var divisor;
@@ -199,117 +198,122 @@ function set_k(new_k) {
 }
 
 // read in the data:
-d3.json("divisor.json", function(error, zzz) {
+d3.json("data.json", function(error, json) {
 
-  divisor = zzz;
+  // Read in a few plot options:
+  legend_width = json['legend.width'];
+  node_width = json['node.width'];
+  node_height = json['node.height'];
 
-  // set K (called 'max_k' here):
+  // First read the vector of divisors for each value of k:
+  divisor = JSON.parse(json['divisor']);
+
+  // set K (called 'max_k' here) based on divisor.length:
   max_k = divisor.length;
 
   // k = 20 is the default initial value (restricted to be between 1 and K):
   set_k(Math.max(min_k, Math.min(max_k, 20))); 
 
-  d3.json("basetree.json", function(error, json) {
-    d3.csv("info.csv", function(error, data) {
+  // gather the data on each of the K trees in the array 'data':
+  data = json['out'];
 
-      // data-dependent values associated with the slider input:
-      sliderInput.min = 1;
-      sliderInput.max = max_k;
-      sliderInput.step = 1;
-      sliderInput.value = current_k;
+  // data-dependent values associated with the slider input:
+  sliderInput.min = 1;
+  sliderInput.max = max_k;
+  sliderInput.step = 1;
+  sliderInput.value = current_k;
 
-      // Create the svg to contain the slider scale:
-      var scaleContainer = d3.select("#sliderdiv").append("svg")
-	      .attr("width", 310)
-	      .attr("height", 25);
+  // Create the svg to contain the slider scale:
+  var scaleContainer = d3.select("#sliderdiv").append("svg")
+	  .attr("width", 310)
+	  .attr("height", 25);
 
-      var sliderScale = d3.scale.linear()
-	      .domain([1, max_k])
-	      //.range([0, 300])
-	      .range([7.5, 292.5])
-        // trimmed by 10px on each side to align with slider button on ends
-	      .nice();
+  var sliderScale = d3.scale.linear()
+	  .domain([1, max_k])
+	//.range([0, 300])
+	  .range([7.5, 292.5])
+  // trimmed by 10px on each side to align with slider button on ends
+	  .nice();
 
-      // adapted from http://bl.ocks.org/mbostock/1166403
-      var sliderAxis = d3.svg.axis()
-	      .scale(sliderScale)
-	      .orient("bottom")
-	      .tickSize(10)
-	      .tickSubdivide(true)
-	      .ticks(6);
-      
-      // group to contain the elements of the slider axis:
-      var sliderAxisGroup = scaleContainer.append("g")
-	      .attr("class", "slideraxis")
-	      .attr("margin-top", "0px")
-	      .call(sliderAxis);
+  // adapted from http://bl.ocks.org/mbostock/1166403
+  var sliderAxis = d3.svg.axis()
+	  .scale(sliderScale)
+	  .orient("bottom")
+	  .tickSize(10)
+	  .tickSubdivide(true)
+	  .ticks(6);
+  
+  // group to contain the elements of the slider axis:
+  var sliderAxisGroup = scaleContainer.append("g")
+	  .attr("class", "slideraxis")
+	  .attr("margin-top", "0px")
+	  .call(sliderAxis);
 
-      // manually change the first slider axis tick label to "1":
-      d3.select("text")[0][0].innerHTML = "1";
+  // manually change the first slider axis tick label to "1":
+  d3.select("text")[0][0].innerHTML = "1";
 
-      // When the value of lambda changes, update the visualization
-      d3.select("#sliderButton")
-        .on("mouseup", function() {
-          var new_k = +this.value;
-          document.getElementById("newk").value = new_k;
-          if (isNaN(new_k))
-            return false;
-          set_k(Math.max(min_k, Math.min(max_k, new_k)));
-          updateTree();
-          return false;
-        });
-
-      // function to read in the value of k from the form
-      // and draw the corresponding k-node summary tree
-      d3.select("#ksubmit").on("click", function() {
-        var new_k = Math.floor(+document.getElementById("newk").value);
-        if (isNaN(new_k))
-          return false;
-        set_k(Math.max(min_k, Math.min(max_k, new_k)));    
-        // update slider to reflect new value of k:
-        document.getElementById("sliderButton").value = current_k;
-        updateTree();
+  // When the value of lambda changes, update the visualization
+  d3.select("#sliderButton")
+    .on("mouseup", function() {
+      var new_k = +this.value;
+      document.getElementById("newk").value = new_k;
+      if (isNaN(new_k))
         return false;
-      });
-
-      // increment k button/link:
-      d3.select("#increase_k").on("click", function() {
-        set_k(Math.min(current_k + 1, max_k));
-        // update slider to reflect new value of k:
-        document.getElementById("sliderButton").value = current_k;
-        updateTree();
-      });
-
-      // decrement k button/link:
-      d3.select("#decrease_k").on("click", function() {
-        set_k(Math.max(current_k - 1, min_k));
-        // update slider to reflect new value of k:
-        document.getElementById("sliderButton").value = current_k;
-        updateTree();
-      });
-
-      // remove the children from the base tree
-      // and store them as "_children" (collapsed):
-      root = json;
-      baseAll(root);
-      root.x0 = 0;
-      root.y0 = 0;
-      root.label = data[2*data.length/3][1];
-      root.size = 0;
-
-      // set up a copy of root called basetree:
-      basetree = JSON.parse(JSON.stringify(root));
-      current_tree = basetree;
-
-      // save the baseline data as a global variable:
-      basedata = data;
-
-      AddLegend();
-
+      set_k(Math.max(min_k, Math.min(max_k, new_k)));
       updateTree();
-
+      return false;
     });
+
+  // function to read in the value of k from the form
+  // and draw the corresponding k-node summary tree
+  d3.select("#ksubmit").on("click", function() {
+    var new_k = Math.floor(+document.getElementById("newk").value);
+    if (isNaN(new_k))
+      return false;
+    set_k(Math.max(min_k, Math.min(max_k, new_k)));    
+    // update slider to reflect new value of k:
+    document.getElementById("sliderButton").value = current_k;
+    updateTree();
+    return false;
   });
+
+  // increment k button/link:
+  d3.select("#increase_k").on("click", function() {
+    set_k(Math.min(current_k + 1, max_k));
+    // update slider to reflect new value of k:
+    document.getElementById("sliderButton").value = current_k;
+    updateTree();
+  });
+
+  // decrement k button/link:
+  d3.select("#decrease_k").on("click", function() {
+    set_k(Math.max(current_k - 1, min_k));
+    // update slider to reflect new value of k:
+    document.getElementById("sliderButton").value = current_k;
+    updateTree();
+  });
+
+
+  // remove the children from the base tree
+  // and store them as "_children" (collapsed):
+  root = JSON.parse(json['basetree']);
+  baseAll(root);
+  root.x0 = 0;
+  root.y0 = 0;
+  root.label = data[2*data.length/3][1];
+  root.size = 0;
+
+  // set up a copy of root called basetree:
+  basetree = JSON.parse(JSON.stringify(root));
+  current_tree = basetree;
+
+  // save the baseline data as a global variable:
+  basedata = data;
+
+  AddLegend();
+
+  updateTree();
+
 });
 
 
@@ -319,7 +323,7 @@ function AddLegend() {
     .attr("x", 0)
     .attr("y", -30)
     .attr("height", 10)
-    .attr("width", max_bar_width)
+    .attr("width", legend_width)
     .attr("fill", "#43a2ca")
     .attr("stroke", "#43a2ca");
 
@@ -345,13 +349,13 @@ function AddLegend() {
   
   maxPrint = vis.append("text")
     .attr("class", "legend_text")
-    .attr("x", max_bar_width)
+    .attr("x", legend_width)
     .attr("y", -5)
     .attr("transform", function(d) { return "translate(0)"; })
     .attr("text-anchor", "start")
     .attr("stroke-width", 0.5)
     .style("fill-opacity", 1)
-    .text(Math.max(divisor[current_k - 1]*max_bar_width))
+    .text(Math.max(divisor[current_k - 1]*legend_width))
     .attr("text-anchor", "end");
 }
 
@@ -363,7 +367,7 @@ function updateTree() {
     .separation(function(a, b) { 
       return (a.parent == b.parent ? sep_sibling : sep_nonsibling); 
     })
-    .nodeSize([12, 150]); // [height, width]
+    .nodeSize([node_height, node_width]); // [height, width]
   // setting .nodeSize() means that tree.size() will be ignored
   // using tree.size() sets the size of the whole tree, and the 
   // content will automatically be squeezed inside this region.
@@ -565,6 +569,6 @@ function updateTree() {
   old_k = current_k;
   
   // print the value of the bar width in the legend:
-  maxPrint.text(Math.round(Math.max(divisor[current_k - 1]*max_bar_width)));
+  maxPrint.text(Math.round(Math.max(divisor[current_k - 1]*legend_width)));
 }
 
