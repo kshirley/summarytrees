@@ -1,33 +1,39 @@
 //234567890123456789012345678901234567890123456789012345678901234567890123456789
 // set up some global variables
-var margin = {top: 50, right: 50, bottom: 50, left: 50};
+var margin = {top: 50, right: 0, bottom: 0, left: 25};
 var svg_width = 3000;
 var svg_height = 5000;
-var basetree;
-var basedata;
+var basetree;  // hold a copy of the baseline tree
+var basedata;  // hold a copy of the node data for k = 1, ..., max_k
 var root;
 var old_tree; 
 var current_tree;
 var new_location;
-//var fixed_depth = 200; // depth of each level in pixels
-var legend_width; // width of legend (and max width of nodes)
-var node_width;
-var node_height;
-var sep_sibling = 2;
-var sep_nonsibling = 3;
+var legend_width; // width of legend bar
+var node_width; // width of each level (node + space)
+var node_height; // node height
+var sep_sibling = 1.7;
+var sep_nonsibling = 2;
 var current_k;
 var old_k = 1; 
 var min_k = 1; 
 var max_k;
-var legend_color = "#43a2ca";
+var legend_color;
+var node_color;  // either the same as legend or computed in R to map to
+// a node's ancestor at a user-supplied level of the tree
 var maxPrint;
 var divisor;
+var units;
+var print_weights; // print the weight of each node in parentheses (T/F)
+var link_height; // maybe use this later to locate entropy profile plot
+// explicitly outside of the area used to draw links between nodes.
+// only troublesome link is the one from root to uppermost child
 
-// I forget what this does...
+
 var diagonal = d3.svg.diagonal()
   .projection(function(d) { return [d.y, d.x]; });
 
-// Set up the base tree (maximum value of k):
+// Set up the base tree for a given node:
 function base(d) {
   if (d.children) {
     d._children = d.children;
@@ -46,16 +52,24 @@ function baseAll(d) {
 // Build the tree of a given size:
 function build(d, k, data) {
   if (d._children) {
-	  var numchildren = 0;
+	  var nchild = 0;
 	  for (var j = 0; j < d._children.length; j++) {
+      // if (this node exists 0/1 in the k-node summary tree)
 	    if (data[k - 1][d._children[j].name] == 1) {
 		    if (d.children == null) { // initialize children if none exist
 		      d.children = []; 
 		    };
 		    d.children.push(d._children[j]);
-		    d.children[numchildren].size = data[max_k + k - 1][d._children[j].name];
-		    d.children[numchildren].label = data[2*max_k + k - 1][d._children[j].name] + " (" + data[max_k + k - 1][d._children[j].name] + ")";
-		    numchildren++;
+        var w = max_k + k - 1;  // index of weight in basedata
+        var l = 2*max_k + k - 1;  // index of label in basedata
+		    d.children[nchild].size = data[w][d._children[j].name];
+		    if (print_weights) {
+          d.children[nchild].label = data[l][d._children[j].name] + 
+            " (" + data[w][d._children[j].name] + ")";
+        } else {
+          d.children[nchild].label = data[l][d._children[j].name];      
+        }
+		    nchild++;
 	    }
 	  }
   }
@@ -176,7 +190,7 @@ vis.append("rect")
   .attr("width", svg_width)
   .attr("height", svg_height)
   .attr("fill", "black")
-  .attr("fill-opacity", 0.10)
+  .attr("fill-opacity", 0.00)
   .attr("stroke", "black")
   .attr("stroke-opacity", 0.00);
 
@@ -188,8 +202,15 @@ vis.append("rect")
   .attr("width", svg_width + margin.left + margin.right)
   .attr("height", svg_height + margin.top + margin.bottom)
   .attr("fill", "black")
-  .attr("fill-opacity", 0.05);
+  .attr("fill-opacity", 0.00);
 
+// Set up a box to contain the entropy profile plot:
+var ep = vis.append("rect")
+  .attr("x", 0)
+  .attr("y", 10)
+  .attr("fill", "black")
+  .attr("fill-opacity", 0.10)
+  .attr("id", "entropy_profile");
 
 // To display the value of k in the box on the webpage:
 function set_k(new_k) {
@@ -204,6 +225,10 @@ d3.json("data.json", function(error, json) {
   legend_width = json['legend.width'];
   node_width = json['node.width'];
   node_height = json['node.height'];
+  units = json['units'];
+  print_weights = json['print.weights'];
+  legend_color = json['legend.color'];
+  node_color = json['node.color'];
 
   // First read the vector of divisors for each value of k:
   divisor = JSON.parse(json['divisor']);
@@ -214,8 +239,11 @@ d3.json("data.json", function(error, json) {
   // k = 20 is the default initial value (restricted to be between 1 and K):
   set_k(Math.max(min_k, Math.min(max_k, 20))); 
 
-  // gather the data on each of the K trees in the array 'data':
+  // gather the data on each of the K trees from the input array 'data':
   data = json['out'];
+
+  ep.attr("width", legend_width);
+  ep.attr("height", legend_width);
 
   // data-dependent values associated with the slider input:
   sliderInput.min = 1;
@@ -231,9 +259,16 @@ d3.json("data.json", function(error, json) {
   var sliderScale = d3.scale.linear()
 	  .domain([1, max_k])
 	//.range([0, 300])
-	  .range([7.5, 292.5])
-  // trimmed by 10px on each side to align with slider button on ends
-	  .nice();
+	  .range([7.5, 292.5]);
+  // trimmed by 7.5px on each side to align with slider button on ends
+	  //.nice(); this led to problems so I replaced it with .tickValues()
+
+  // Set up a manual array of tick labels because .nice() was creating 
+  // labels outside of the domain (max of 160 when max_k was 150 for example)
+  tickvector = [1];
+  for (i = 1; i <= 6; i++) {
+    tickvector.push(Math.round(i*max_k/6));
+  }
 
   // adapted from http://bl.ocks.org/mbostock/1166403
   var sliderAxis = d3.svg.axis()
@@ -241,8 +276,8 @@ d3.json("data.json", function(error, json) {
 	  .orient("bottom")
 	  .tickSize(10)
 	  .tickSubdivide(true)
-	  .ticks(6);
-  
+    .tickValues(tickvector);
+
   // group to contain the elements of the slider axis:
   var sliderAxisGroup = scaleContainer.append("g")
 	  .attr("class", "slideraxis")
@@ -250,7 +285,10 @@ d3.json("data.json", function(error, json) {
 	  .call(sliderAxis);
 
   // manually change the first slider axis tick label to "1":
-  d3.select("text")[0][0].innerHTML = "1";
+  // warning: this might only work because the first slider axis tick label 
+  // is the first text element in the vis (for now)
+  //d3.select("text")[0][0].innerHTML = "1";
+  // Note: no longer necessary as I am manually setting tick labels (above)
 
   // When the value of lambda changes, update the visualization
   d3.select("#sliderButton")
@@ -324,8 +362,8 @@ function AddLegend() {
     .attr("y", -30)
     .attr("height", 10)
     .attr("width", legend_width)
-    .attr("fill", "#43a2ca")
-    .attr("stroke", "#43a2ca");
+    .attr("fill", legend_color)
+    .attr("stroke", legend_color);
 
   vis.append("text")
     .attr("class", "legend_text")
@@ -335,7 +373,7 @@ function AddLegend() {
     .attr("text-anchor", "start")
     .attr("stroke-width", 0.5)
     .style("fill-opacity", 1)
-    .text("Size Legend (kb)");
+    .text("Node Weight" + (units == "" ? "" : " (" + units + ")"));
 
   vis.append("text")
     .attr("class", "legend_text")
@@ -368,11 +406,14 @@ function updateTree() {
       return (a.parent == b.parent ? sep_sibling : sep_nonsibling); 
     })
     .nodeSize([node_height, node_width]); // [height, width]
-  // setting .nodeSize() means that tree.size() will be ignored
+  // setting .nodeSize() means that tree.size() will be ignored.
   // using tree.size() sets the size of the whole tree, and the 
   // content will automatically be squeezed inside this region.
   // tree.size() keeps the vis compact but for K > about 100, the nodes
   // typically start to overlap if the region is a single screen.
+  // better to use nodeSize() to ensure good spacing between nodes, 
+  // even if the vis extends beyond 1 screen in width or height, requiring
+  // the user to scroll to the right or down.
 
   // duration of transitions:
   var duration = d3.event && d3.event.altKey ? 5000 : 600;
@@ -385,9 +426,16 @@ function updateTree() {
 
   // add in the information for the root:
   current_tree.size = basedata[max_k + current_k - 1]["1"];
-  current_tree.label = basedata[2*max_k + current_k - 1]["1"] + " (" + 
-    basedata[max_k + current_k - 1]["1"] + ")";
+  if (print_weights) {
+    current_tree.label = basedata[2*max_k + current_k - 1]["1"] + " (" + 
+      basedata[max_k + current_k - 1]["1"] + ")";
+  } else {
+    current_tree.label = basedata[2*max_k + current_k - 1]["1"]
+  }
+
+  // create the nodes and links objects:
   var nodes = tree.nodes(current_tree);
+  var links = tree.links(nodes);
 
   // Shift everything down:
   var shift = 0;
@@ -396,7 +444,8 @@ function updateTree() {
       shift = d.x;
     }
   });
-
+  if (shift > -190) { shift = -190};
+  
   nodes.forEach(function(d) {
     d.x = d.x - shift + node_height/2;
   });
@@ -425,9 +474,6 @@ function updateTree() {
     }
   });
 
-  // compute the links for the new tree:
-  var links = tree.links(nodes);
-
   // Update the nodes:
   var node = vis.selectAll("g.node")
     .data(nodes, function(d) { return d.name; });
@@ -446,12 +492,17 @@ function updateTree() {
     .attr("width", 1e-6)
     .attr("x", 0)
     .attr("y", -node_height/2)
-    .style("fill", "#43a2ca");
+    .style("stroke", function(d) {
+      return (d.depth == 0 ? "#ffffff" : node_color[d.name]);
+    })
+    .style("fill", function(d) {
+      return (d.depth == 0 ? "#ffffff" : node_color[d.name]);
+    })
 
   nodeEnter.append("svg:text")
     .attr("x", function(d) {
       var adjust;
-      if (d.size == 0) {
+      if (d.size == 0 & d.depth != 0) {
         adjust = -3;
       } else {
         adjust = 0;
@@ -462,7 +513,7 @@ function updateTree() {
     .attr("transform", function(d) { return "translate(0)"; })
     .attr("text-anchor", function(d) {
       var anchor;
-      if (d.size == 0) {
+      if (d.size == 0 & d.depth != 0) {
         anchor = "end";
       } else {
         anchor = "start";
@@ -471,6 +522,11 @@ function updateTree() {
     })
     .text(function(d) { return d.label; })
     .style("fill-opacity", 1e-6);
+
+  // get width of the text svg element that holds the root's label:
+  // this relies on the root always being the 11th (index = 10)
+  // text element on the page!
+  root_text_width = d3.selectAll("text")[0][10].getBBox().width;
 
   // Transition nodes to their new position.
   var nodeUpdate = node.transition()
@@ -481,15 +537,19 @@ function updateTree() {
 
   nodeUpdate.select("rect")
     .attr("height", node_height)
-    .attr("width", function(d) { return d.size/divisor[current_k - 1] ; })
+    .attr("width", function(d) { 
+      return (d.depth != 0 ? d.size/divisor[current_k - 1] : root_text_width); 
+    })
     .attr("x", 0)
     .attr("y", -node_height/2)
-    .style("fill", "#43a2ca");
+    .style("fill", function(d) {
+      return (d.depth != 0 ? node_color[d.name] : "#ffffff")
+    });
 
   nodeUpdate.select("text")
     .attr("x", function(d) {
       var adjust;
-      if (d.size == 0) {
+      if (d.size == 0 & d.depth != 0) {
         adjust = -3;
       } else {
         adjust = 0;
@@ -500,7 +560,7 @@ function updateTree() {
     .attr("transform", function(d) { return "translate(0)"; })
     .attr("text-anchor", function(d) {
       var anchor;
-      if (d.size == 0) {
+      if (d.size == 0 & d.depth != 0) {
         anchor = "end";
       } else {
         anchor = "start";
@@ -570,5 +630,9 @@ function updateTree() {
   
   // print the value of the bar width in the legend:
   maxPrint.text(Math.round(Math.max(divisor[current_k - 1]*legend_width)));
+
+  // get height of link from root to highest child:
+  link_height = d3.select("path.link")[0][0].getBBox().height;
+
 }
 

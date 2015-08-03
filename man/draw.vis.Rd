@@ -6,7 +6,7 @@
 draw.vis(json.object, out.dir = tempfile(), open.browser = interactive())
 }
 \arguments{
-\item{json}{character string output from \link{prepare.vis()}.}
+\item{json.object}{character string output from \link{prepare.vis()}.}
 
 \item{out.dir}{directory to store html/js/json files.}
 

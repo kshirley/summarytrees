@@ -25,7 +25,11 @@
 prepare.vis <- function(tree.list, labels = NULL, tree = NULL,
                         legend.width = 100,
                         node.width = 150,
-                        node.height = 12) {
+                        node.height = 12,
+                        units = "",
+                        print.weights = FALSE,
+                        legend.color = "fed976",
+                        color.level = NULL) {
 
   # Check that the legend.width is not wider than the level.width
   if (node.width < legend.width) {
@@ -70,7 +74,8 @@ prepare.vis <- function(tree.list, labels = NULL, tree = NULL,
   }
 
   # Look at the edges and the associated node labels:
-  du <- data.frame(u, node = all.nodes[-1])
+  du <- data.frame(rbind(c(0, 1), u), node = all.nodes,
+                  stringsAsFactors = FALSE)
   # this excludes the root
   # child.vec = 0 indicates 'other' node here
 
@@ -102,6 +107,45 @@ prepare.vis <- function(tree.list, labels = NULL, tree = NULL,
     node.labels[k, -1][o] <- label.vec[-1]
     node.labels[k ,1] <- label.vec[1]
   }
+
+  # compute ancestor at a given level:
+  node.color <- numeric(l)
+  if (!is.null(color.level)) {
+    color.vector <- RColorBrewer::brewer.pal(12, "Paired")
+    # compute the level of each node:
+    level <- numeric(l)
+    current.level <- 1
+    level[which(du[, "parent.vec"] == 0)] <- current.level
+    n.zero <- sum(level == 0)
+    while (n.zero > 0) {
+      #print(current.level)
+      current.level <- current.level + 1
+      level[du[, 1] %in% du[level == current.level - 1, 3]] <- current.level
+      n.zero <- sum(level == 0)
+    }
+
+    ancest <- rep("", l)
+    for (i in 1:l) {
+      if (level[i] < color.level){
+        ancest[i] <- NA
+      }
+      if (level[i] == color.level) ancest[i] <- du[i, "node"]
+      if (level[i] > color.level) {
+        ancest[i] <- du[i, "node"]
+        for (iter in level[i]:(color.level + 1)){
+          tmp <- as.character(du[du[, 3] == ancest[i], "parent.vec"])
+          ancest[i] <- tmp
+        }
+      }
+    }
+    # cycle through the 12 colors:
+    color.index <- (match(ancest, sort(unique(ancest))) - 1) %% 12 + 1
+    node.color <- color.vector[color.index]
+    node.color[is.na(node.color)] <- legend.color
+  } else {
+    node.color <- rep(legend.color, l)
+  }
+  names(node.color) <- all.nodes
 
   # recursive function to write the tree object to a json formatted
   # character vector:
@@ -186,7 +230,11 @@ prepare.vis <- function(tree.list, labels = NULL, tree = NULL,
               out = out,
               legend.width = legend.width,
               node.width = node.width,
-              node.height = node.height)
+              node.height = node.height,
+              units = units,
+              print.weights = print.weights,
+              legend.color = legend.color,
+              node.color = node.color)
 
   # convert the list to a json object:
   json.object <- RJSONIO::toJSON(all)
