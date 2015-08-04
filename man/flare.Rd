@@ -2,7 +2,7 @@
 \docType{data}
 \name{flare}
 \alias{flare}
-\title{File structure of the 'flare' software package for data visualization}
+\title{File structure of the 'flare' software package}
 \format{A data frame with 252 rows and 4 variables:
 \describe{
   \item{node}{node ID number for each file or directory, numbered from
