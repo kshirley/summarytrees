@@ -28,7 +28,10 @@ var print_weights; // print the weight of each node in parentheses (T/F)
 var link_height; // maybe use this later to locate entropy profile plot
 // explicitly outside of the area used to draw links between nodes.
 // only troublesome link is the one from root to uppermost child
-
+var entropy;
+var maxent;
+var epcircle;
+var lineGraph;
 
 var diagonal = d3.svg.diagonal()
   .projection(function(d) { return [d.y, d.x]; });
@@ -229,6 +232,7 @@ d3.json("data.json", function(error, json) {
   print_weights = json['print.weights'];
   legend_color = json['legend.color'];
   node_color = json['node.color'];
+  entropy = json['entropy'];
 
   // First read the vector of divisors for each value of k:
   divisor = JSON.parse(json['divisor']);
@@ -237,11 +241,13 @@ d3.json("data.json", function(error, json) {
   max_k = divisor.length;
 
   // k = 20 is the default initial value (restricted to be between 1 and K):
-  set_k(Math.max(min_k, Math.min(max_k, 20))); 
+  set_k(Math.max(min_k, Math.min(max_k, 20)));
 
   // gather the data on each of the K trees from the input array 'data':
   data = json['out'];
+  //debugger;
 
+  // set width and height of entropy profile plot to match legend_width:
   ep.attr("width", legend_width);
   ep.attr("height", legend_width);
 
@@ -340,6 +346,7 @@ d3.json("data.json", function(error, json) {
   root.y0 = 0;
   root.label = data[2*data.length/3][1];
   root.size = 0;
+  //debugger;
 
   // set up a copy of root called basetree:
   basetree = JSON.parse(JSON.stringify(root));
@@ -349,6 +356,36 @@ d3.json("data.json", function(error, json) {
   basedata = data;
 
   AddLegend();
+
+  // scale entropy values:
+  var entropyx = d3.scale.linear()
+    .domain([1, max_k])
+    .range([1, legend_width]);
+
+  // From: http://stackoverflow.com/questions/4020796/
+  // finding-the-max-value-of-an-attribute-in-an-array-of-objects
+  maxent = Math.max.apply(Math, entropy.map(function(o) { return o.y;}));
+  var entropyy = d3.scale.linear()
+    .domain([0, maxent])
+    .range([legend_width, 0]);
+
+  // function to plot a line:
+  var lineFunction = d3.svg.line()
+    .x(function(d) { return entropyx(d.x); })
+    .y(function(d) { return entropyy(d.y); })
+    .interpolate("linear");
+
+  //The line SVG Path we draw
+  lineGraph = vis.append("path")
+    .attr("d", lineFunction(entropy))
+    .attr("class", "ep")
+    .attr("transform", function(d) { return "translate(0, 10)";});
+
+  // append a circle (with no location yet):
+  epcircle = vis.append("circle")
+    .attr("fill", "black")
+    .attr("id", "entropycircle")
+    .attr("r", 5);
 
   updateTree();
 
@@ -432,6 +469,7 @@ function updateTree() {
   } else {
     current_tree.label = basedata[2*max_k + current_k - 1]["1"]
   }
+  //debugger;
 
   // create the nodes and links objects:
   var nodes = tree.nodes(current_tree);
@@ -444,7 +482,7 @@ function updateTree() {
       shift = d.x;
     }
   });
-  if (shift > -190) { shift = -190};
+  if (shift > -250) { shift = -250};
   
   nodes.forEach(function(d) {
     d.x = d.x - shift + node_height/2;
@@ -538,12 +576,14 @@ function updateTree() {
   nodeUpdate.select("rect")
     .attr("height", node_height)
     .attr("width", function(d) { 
-      return (d.depth != 0 ? d.size/divisor[current_k - 1] : root_text_width); 
+      return ((d.depth != 0 || current_k == 1) ? 
+              d.size/divisor[current_k - 1] : root_text_width); 
     })
     .attr("x", 0)
     .attr("y", -node_height/2)
     .style("fill", function(d) {
-      return (d.depth != 0 ? node_color[d.name] : "#ffffff")
+      return ((d.depth != 0 || current_k == 1) ? 
+              node_color[d.name] : "#ffffff")
     });
 
   nodeUpdate.select("text")
@@ -625,14 +665,66 @@ function updateTree() {
     d.y0 = d.y;
   });
 
-  // set the old_k to the current_k:
-  old_k = current_k;
-  
   // print the value of the bar width in the legend:
   maxPrint.text(Math.round(Math.max(divisor[current_k - 1]*legend_width)));
 
-  // get height of link from root to highest child:
+  // get height of link from root to highest child
+  // (might be used later to offset entropy profile plot)
   link_height = d3.select("path.link")[0][0].getBBox().height;
+
+  // scale entropy values:
+  var entropyx = d3.scale.linear()
+    .domain([1, max_k])
+    .range([1, legend_width]);
+
+  // From: http://stackoverflow.com/questions/4020796/
+  // finding-the-max-value-of-an-attribute-in-an-array-of-objects
+  var entropyy = d3.scale.linear()
+    .domain([0, maxent])
+    .range([legend_width, 0]);
+
+  // http://stackoverflow.com/questions/25655372/d3-steady-horizontal-
+  // transition-along-an-svg-path
+  var lookup = [];
+  var granularity = 1000;
+  var l = lineGraph.node().getTotalLength();
+  for(var i = 0; i <= granularity; i++) {
+    var p = lineGraph.node().getPointAtLength(l * (i/granularity));
+    lookup.push({
+      x: p.x,
+      y: p.y + 10
+    })
+  }
+    
+  // https://gist.github.com/mbostock/1313857
+  // Returns an attrTween for translating along the specified path element.
+  var xBisect = d3.bisector(function(d) { return d.x; }).left;
+
+  function translateAlong(path, nw, old) {
+    var l = path.getTotalLength();
+    return function(d, i, a) {
+      return function(t) {
+        var scalar = (nw - old)/(max_k - 1);
+        var start = (old - 1)/(max_k - 1);
+        var index = xBisect(lookup, (t * scalar + start)*legend_width);
+        var p = lookup[index];
+        return "translate(" + p.x + "," + p.y + ")";
+      };
+    };
+  }
+
+  // update the location of the point on the entropy profile plot:
+  epcircle.transition()
+    .duration(600)
+    .attrTween("transform", translateAlong(lineGraph.node(), current_k, old_k));
+  
+  // set the old_k to the current_k:
+  old_k = current_k;
+  
+  // no transition on circle for entropy profile plot:
+  //epcircle
+  //  .attr("cx", entropyx(current_k))
+  //  .attr("cy", entropyy(entropy[current_k - 1]["y"]) + 10);
 
 }
 

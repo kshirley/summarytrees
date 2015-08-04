@@ -224,6 +224,13 @@ prepare.vis <- function(tree.list, labels = NULL, tree = NULL,
   for (k in 2:K) divisor[k] <- max(size.range[[k]])/100
   divisor[1] <- divisor[2]
 
+  # Compute entropy of each of the K trees:
+  norm <- function(x) if (sum(x) == 0) numeric(length(x)) else x/sum(x)
+  xlogx <- function(x) ifelse(x == 0, 0, x*log(x, 2))
+  ent <- function(x) -sum(xlogx(norm(x)))
+  ent.vec <- sapply(tree.list, function(x) ent(x[, "weight"]))
+  entropy <- cbind(x = 1:K, y = ent.vec)
+
   # gather all the data to be sent to the browser in a list:
   all <- list(basetree = basetree,
               divisor = toJSON(divisor),
@@ -234,7 +241,8 @@ prepare.vis <- function(tree.list, labels = NULL, tree = NULL,
               units = units,
               print.weights = print.weights,
               legend.color = legend.color,
-              node.color = node.color)
+              node.color = node.color,
+              entropy = entropy)
 
   # convert the list to a json object:
   json.object <- RJSONIO::toJSON(all)
