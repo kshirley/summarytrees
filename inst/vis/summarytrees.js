@@ -165,7 +165,7 @@ kdiv.appendChild(increaseButton);
 
 var sliderWrapper = document.createElement("div");
 sliderWrapper.setAttribute("id", "lambdaInput");
-sliderWrapper.setAttribute("class", "slider");
+sliderWrapper.setAttribute("class", "slid");
 kdiv.appendChild(sliderWrapper);
 
 var sliderDiv = document.createElement("div");

@@ -28,7 +28,7 @@ prepare.vis <- function(tree.list, labels = NULL, tree = NULL,
                         node.height = 12,
                         units = "",
                         print.weights = FALSE,
-                        legend.color = "fed976",
+                        legend.color = "lightsteelblue",
                         color.level = NULL) {
 
   # Check that the legend.width is not wider than the level.width

@@ -34,9 +34,13 @@
 #' @source This data is distributed with the permission of and in cooperation
 #' with the Mathematics Genealogy Project (MGP):
 #' \url{http://genealogy.math.ndsu.nodak.edu/}.
+#'
 #' Also note that:
+#'
 #' 1. This data may not be redistributed separately from the R package.
+#'
 #' 2. This is a snapshot of MGP data from June 7, 2012.
+#'
 #' 3. The node identifiers (1, 2, ..., 43537) here are not the same
 #' identifiers used by the MGP (we mention this for clarification purposes).
 "gauss"

@@ -5,7 +5,7 @@
 \usage{
 prepare.vis(tree.list, labels = NULL, tree = NULL, legend.width = 100,
   node.width = 150, node.height = 12, units = "", print.weights = FALSE,
-  legend.color = "fed976", color.level = NULL)
+  legend.color = "lightsteelblue", color.level = NULL)
 }
 \arguments{
 \item{tree.list}{the list of summary trees that is output by either the
