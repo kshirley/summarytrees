@@ -32,6 +32,8 @@ var entropy;
 var maxent;
 var epcircle;
 var lineGraph;
+var ent_x;
+var ent_y;
 
 var diagonal = d3.svg.diagonal()
   .projection(function(d) { return [d.y, d.x]; });
@@ -215,6 +217,19 @@ var ep = vis.append("rect")
   .attr("fill-opacity", 0.10)
   .attr("id", "entropy_profile");
 
+ent_y = vis.append("text")
+  .attr("class", "legend_text")
+  .attr("text-anchor", "middle")
+  .attr("stroke-width", 0.5)
+  .text("entropy"); 
+
+ent_x = vis.append("text")
+  .attr("class", "legend_text")
+  .attr("text-anchor", "middle")
+  .attr("stroke-width", 0.5)
+  .text("# nodes (k)"); 
+
+
 // To display the value of k in the box on the webpage:
 function set_k(new_k) {
   current_k = new_k;
@@ -250,6 +265,15 @@ d3.json("data.json", function(error, json) {
   // set width and height of entropy profile plot to match legend_width:
   ep.attr("width", legend_width);
   ep.attr("height", legend_width);
+  ent_y.attr("x", 0);
+  ent_y.attr("y", legend_width/2);
+  ent_y.attr("transform", function(d) { 
+    return "translate(-" + (3 + legend_width/2) + ", " + legend_width/2 + 
+           ")rotate(-90)";
+  });
+  ent_x.attr("x", legend_width/2);
+  ent_x.attr("y", legend_width + 20);
+
 
   // data-dependent values associated with the slider input:
   sliderInput.min = 1;
@@ -482,7 +506,7 @@ function updateTree() {
       shift = d.x;
     }
   });
-  if (shift > -250) { shift = -250};
+  if (shift > -260) { shift = -260};
   
   nodes.forEach(function(d) {
     d.x = d.x - shift + node_height/2;
@@ -721,10 +745,5 @@ function updateTree() {
   // set the old_k to the current_k:
   old_k = current_k;
   
-  // no transition on circle for entropy profile plot:
-  //epcircle
-  //  .attr("cx", entropyx(current_k))
-  //  .attr("cy", entropyy(entropy[current_k - 1]["y"]) + 10);
-
 }
 
