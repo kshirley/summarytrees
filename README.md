@@ -27,9 +27,9 @@ The `summarytrees` package implements a dynamic programming algorithm that aggre
 
 #### Demonstrations
 
-For a demonstration of the interactive visualization of a set of maximum entropy summary trees for a given data set, visit one of the links in the first columns of the table below. In the table, the running times reported for each data set are from a single run (not averaged over multiple runs) computing maximum entropy summary trees for $k = 1, 2, .., K = 100$ on a single machine with a 2.67 GHz CPU and 48GB of RAM). See Section 7 of [our paper](http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf) for more details.
+For a demonstration of the interactive visualization of a set of maximum entropy summary trees for a given data set, visit one of the links in the first columns of the table below. In the table, the running times reported for each data set are from a single run (not averaged over multiple runs) computing maximum entropy summary trees for k = 1, 2, .., K = 100 on a single machine with a 2.67 GHz CPU and 48GB of RAM). See Section 7 of [our paper](http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf) for more details.
 
-|Data           | # Nodes| Total Weight| Max Depth|Optimal |Approx ($\epsilon = 0.1$) |Approx ($\epsilon = 0.5$) |Greedy |
+|Data           | # Nodes| Total Weight| Max Depth|Optimal |Approx (epsilon = 0.1) |Approx (epsilon = 0.5) |Greedy |
 |:--------------|-------:|------------:|---------:|:-------|:--------------------------|:--------------------------|:------|
 |Web Traffic    |   19335|    260276921|        17|  --    |6:08                       |1:02                       |0:05   |
 |Hard Drive     |   15671|       146933|         7|27:58   |16:59                      |2:11                       |0:02   |
@@ -47,14 +47,11 @@ library(devtools)
 install_github("kshirley/summarytrees")
 ```
 
-It has been tested on a Mac OS X 10.9.5, using R version 3.1.2, Chrome Version 44.0.2403.130 (64-bit), and Firefox 39.0. More testing is planned for the near future.
+It has been developed on a Mac OS X 10.9.5, using R version 3.1.2, Chrome Version 44.0.2403.130 (64-bit), and Firefox 39.0. More testing is planned for the near future to make sure it all works in multiple environments.
 
 #### Vignettes
 
 There are three vignettes included with the package.
-<!--
-and the data associated with each vignette is also included with the package.
--->
 
 1. The first vignette contains an analysis of the Carl Gauss subtree of the Math Genealogy Project (MGP), where the hierarchy of the tree is defined by the advisor-student relationships among mathematicians (starting with Carl Gauss as an advisor) and the node weight for each mathematician is set to 1 by default. To load the vignette, type:
 ```{r}
