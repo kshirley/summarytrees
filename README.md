@@ -17,6 +17,7 @@ The input data looks something like the table below, containing the node ID, the
 |      5|      1|      0|Games                                 |     2|
 |      6|      1|      0|Home                                  |     2|
 |      7|      1|      0|Recreation                            |     2|
+|    ...|    ...|   ...|...                                    |   ...|
 | 635853| 635689|      3|Instytut_Mikromechaniki_i_Fotoniki    |    15|
 | 635854| 635062|      1|Maronite                              |    15|
 | 635855| 635074|      3|Wirtschaftsprüfung_und_Steuerberatung |    15|
@@ -27,16 +28,16 @@ The `summarytrees` package implements a dynamic programming algorithm that aggre
 
 #### Demonstrations
 
-For a demonstration of the interactive visualization of a set of maximum entropy summary trees for a given data set, visit one of the links in the first columns of the table below. In the table, the running times reported for each data set are from a single run (not averaged over multiple runs) computing maximum entropy summary trees for k = 1, 2, .., K = 100 on a single machine with a 2.67 GHz CPU and 48GB of RAM). See Section 7 of [our paper](http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf) for more details.
+To see some demos, visit one of the links in the first columns of the table below. The running times reported for each data set are from a single run (not averaged over multiple runs) computing maximum entropy summary trees for k = 1, 2, .., K = 100 on a single machine with a 2.20 GHz CPU and over 100 GB of RAM. See Section 7 of [our paper](http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf) for more details.
 
-|Data           | # Nodes| Total Weight| Max Depth|Optimal |Approx (epsilon = 0.1) |Approx (epsilon = 0.5) |Greedy |
+|Data           | # Nodes| Total Weight| Max Depth|Optimal |Approx (epsilon = 0.1) |Approx (epsilon  0.5) |Greedy |
 |:--------------|-------:|------------:|---------:|:-------|:--------------------------|:--------------------------|:------|
 |Web Traffic    |   19335|    260276921|        17|  --    |6:08                       |1:02                       |0:05   |
 |Hard Drive     |   15671|       146933|         7|27:58   |16:59                      |2:11                       |0:02   |
 |Tree of Life   |   94080|        54121|       123|6:04    |18:18                      |2:30                       |0:13   |
-|Math Genealogy |   43527|        43527|        17|6:16    |19:37                      |3:31                       |0:05   |
+|[Math Genealogy](http://www.research.att.com/~kshirley/summarytrees/gauss) |   43527|        43527|        17|6:16    |19:37                      |3:31                       |0:05   |
 |Org Chart      |   43134|        43134|        10|2:19    |6:12                       |0:55                       |0:03   |
-|DMOZ           |  635855|      3776432|        15|  --    |44:10                      |8:11                       |1:03   |
+|[DMOZ](http://www.research.att.com/~kshirley/summarytrees/dmoz)           |  635855|      3776432|        15|  --    |44:10                      |8:11                       |1:03   |
 |R Source       |    4704|     77420268|         8|  --    |5:09                       |0:59                       |0:01   |
 
 #### Installation
@@ -51,24 +52,25 @@ It has been developed on a Mac OS X 10.9.5, using R version 3.1.2, Chrome Versio
 
 #### Vignettes
 
-There are three vignettes included with the package.
+There are two vignettes included with the package.
 
-1. The first vignette contains an analysis of the Carl Gauss subtree of the Math Genealogy Project (MGP), where the hierarchy of the tree is defined by the advisor-student relationships among mathematicians (starting with Carl Gauss as an advisor) and the node weight for each mathematician is set to 1 by default. To load the vignette, type:
+1. The "Gauss" vignette contains an analysis of the Carl Gauss subtree of the Math Genealogy Project (MGP), where the hierarchy of the tree is defined by the advisor-student relationships among mathematicians (starting with Carl Gauss as an advisor) and the node weight for each mathematician is set to 1 by default. To load the vignette, type:
 ```{r}
 vignette("Gauss", package = "summarytrees")
 ```
 Note: This sample of data has been shared with the permission and cooperation of the Math Genealogy Project; please do not re-distribute it. See `help("Gauss", package = "summarytrees")` for more.
 
-2. The second vignette contains an analysis of the file structure of the source code of R (version 3.2.1), where node weights are set to the sizes (in bytes) of the files, and the directory structure defines the hierarchy.
-```{r}
-vignette("Rsource", package = "summarytrees")
-```
-
-3. The third vignette contains an analysis of the DMOZ (aka Open Directory Project) directory of websites. In thie data set, approximately 3.7 million URLs are categorized into a depth-15 hierarchy with ~600,000 unique topics (categories). The input tree node weights are set to the number of URLs belonging to each topic in the hierarchy.
+2. The "DMOZ" vignette contains an analysis of the DMOZ (aka Open Directory Project) directory of websites. In thie data set, approximately 3.7 million URLs are categorized into a depth-15 hierarchy with ~600,000 unique topics (categories). The input tree node weights are set to the number of URLs belonging to each topic in the hierarchy.
 ```{r}
 vignette("DMOZ", package = "summarytrees")
 ```
 
+<!--
+3. The "RSource" vignette contains an analysis of the file structure of the source code of R (version 3.2.1), where node weights are set to the sizes (in bytes) of the files, and the directory structure defines the hierarchy.
+```{r}
+vignette("Rsource", package = "summarytrees")
+```
+-->
 
 #### Documentation/Help
 
@@ -80,4 +82,5 @@ The original paper describing the algorithm and resulting visualizations is:
 A copy of the paper is available [here](http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf).
 
 A website describing the work is [here](http://www.research.att.com/~kshirley/summarytrees.html).
+
 
