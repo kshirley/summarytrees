@@ -588,7 +588,7 @@ function updateTree() {
   // get width of the text svg element that holds the root's label:
   // this relies on the root always being the 11th (index = 10)
   // text element on the page!
-  root_text_width = d3.selectAll("text")[0][10].getBBox().width;
+  root_text_width = d3.selectAll("text")[0][12].getBBox().width;
 
   // Transition nodes to their new position.
   var nodeUpdate = node.transition()
