@@ -28,7 +28,7 @@ The `summarytrees` package implements a dynamic programming algorithm that aggre
 
 #### Demonstrations
 
-To see some demos, visit one of the links in the first columns of the table below. The running times reported for each data set are from a single run (not averaged over multiple runs) computing maximum entropy summary trees for k = 1, 2, .., K = 100 on a single machine with a 2.20 GHz CPU and over 100 GB of RAM. See Section 7 of [our paper](http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf) for more details.
+To see some demos, visit one of the links in the first column of the table below. The running times reported for each data set are from a single run (not averaged over multiple runs) computing maximum entropy summary trees for k = 1, 2, .., K = 100 on a single machine with a 2.20 GHz CPU and over 100 GB of RAM. See Section 7 of [our paper](http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf) for more details.
 
 |Data           | # Nodes| Total Weight| Max Depth|Optimal |Approx (epsilon = 0.1) |Approx (epsilon  0.5) |Greedy |
 |:--------------|-------:|------------:|---------:|:-------|:--------------------------|:--------------------------|:------|
