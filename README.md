@@ -23,9 +23,7 @@ The input data looks something like the table below, containing the node ID, the
 
 The `summarytrees` package implements a dynamic programming algorithm that aggregates the nodes of the input tree in an optimal way, maximizing the entropy of the distribution of the node weights of the aggregated tree among all possible aggregations of a given size, subject to certain constraints. The resulting set of *summary trees* can be visualized using d3.js to allow for exploratory data analysis of the strucure and weight distribution of the input tree. Below is a snapshot of the 18-node maximum entropy summary tree of the DMOZ data:
 
-<!--
-![summarytrees preview](http://www2.research.att.com/~kshirley/figures/dmoz-readme.png)
--->
+![summarytrees preview](http://www.research.att.com/~kshirley/figures/dmoz-readme.png)
 
 #### Demonstrations
 
