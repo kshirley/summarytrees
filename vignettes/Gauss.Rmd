@@ -1,0 +1,193 @@
+---
+title: "Summary Trees Example: Math Genealogy Tree"
+author: "Kenneth E. Shirley"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Summary Trees Example: Math Genealogy Tree}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(collapse = FALSE, comment = "#>", cache = TRUE)
+```
+
+## Introduction
+
+This vignette demonstrates how to compute and visualize maximum entropy summary trees. Maximum entropy summary trees are a useful way to summarize and visualize a data set that can be represented by a rooted, node-weighted trees, where the node weights are non-negative.
+
+One such data set is the Math Genealogy Tree, which is hosted and managed by the [Math Genealogy Project](http://genealogy.math.ndsu.nodak.edu/). The Math genealogy tree contains information about the advisor-student relationships between mathematicians and scientists in related fields (such as statistics) who have, at some point in history, earned a Ph.D. Technically, the math genealogy tree is not a tree, since some students have multiple advisors (for more on this, see [here]()), but we forced the graph to be a tree by assigning each student to their primary advisor (thus removing some edges of the graph). The MGP has kindly agreed to allow us to share a sample from their data: the subtree rooted at Carl Gauss. For more on this sample of data, see `{r help("Gauss", package = "summarytrees")}.
+
+First, load the package:
+```{r libraries}
+library(devtools)
+#install_github("kshirley/summarytrees")
+#install("~/Git/summarytrees/")
+library(summarytrees)
+```
+
+Next, load the data:
+```{r load-Gauss}
+data(Gauss)
+dim(Gauss)
+head(Gauss)
+```
+
+There are four columns in the data.frame: node, parent, weight, and label, where `node` and `parent` are non-negative integer ID numbers (with each node ID number being unique), weight is a non-negative numeric value indicating the weight of each node, and `label` is a character vector of node labels (which need not be unique). There must be exactly one element of `parent` set to 0, indicating the root node of the tree.
+
+Note that Carl Gauss has 43,527 total descendants in this version of the data, which is based on a snapshot of the data from June, 2012 (and also depends on our method for edge removal to coerce the graph to a tree). We assigned a weigth of one to each node (mathematician) in the tree, although you could imagine using different weight schemes to answer different questions (weights could be the number of papers written, an indicator of one's nationality being equal to some particular country, or an indicator of one's home university being equal to some university of interest, for example).
+
+The first thing we'll do is abbreviate the labels to the first initial + last name:
+```{r abbreviate-names}
+last <- sapply(strsplit(Gauss[, "label"], " "), function(x) x[length(x)])
+first.initial <- substr(Gauss[, "label"], 1, 1)
+Gauss[, "label"] <- paste(first.initial, last, sep = " ")
+```
+
+Next, we compute the maximum entropy $k$-node summary trees for $k = 1, 2, ..., 10$ using three different versions of the algorithm. Setting a maximum size of 10 isn't very realistic -- this is just to illustrate the syntax for all three functions.
+
+## Greedy Algorithm:
+```{r greedy-Gauss}
+t1 <- Sys.time()
+g <- greedy(node = Gauss[, "node"], 
+            parent = Gauss[, "parent"], 
+            weight = Gauss[, "weight"], 
+            label = Gauss[, "label"], 
+            K = 10)
+t2 <- Sys.time()
+t2 - t1
+```
+
+## Optimal Algorithm (exact solution):
+```{r exact-Gauss}
+t1 <- Sys.time()
+e <- optimal(node = Gauss[, "node"], 
+             parent = Gauss[, "parent"], 
+             weight = Gauss[, "weight"], 
+             label = Gauss[, "label"], 
+             K = 10, 
+             epsilon = 0)
+t2 <- Sys.time()
+t2 - t1
+```
+
+## Optimal Algorithm (approximation):
+```{r approximate-Gauss}
+t1 <- Sys.time()
+a <- optimal(node = Gauss[, "node"], 
+             parent = Gauss[, "parent"], 
+             weight = Gauss[, "weight"], 
+             label = Gauss[, "label"], 
+             K = 10, 
+             epsilon = 0.5)
+t2 <- Sys.time()
+t2 - t1
+```
+
+To compare the resulting 20-node summary trees, for example, we can print them to the screen:
+```{r print-st}
+g$summary.trees[[10]]
+e$summary.trees[[10]]
+a$summary.trees[[10]]
+```
+
+```{r check-equality}
+all.equal(g$summary.trees[[20]], e$summary.trees[[20]])
+all.equal(g$summary.trees[[20]], a$summary.trees[[20]])
+```
+
+In this case, all three 20-node summary trees are the same. In other words, for $k=20$, the greedy algorithm and the approximate algorithm returned the maximum entropy summary tree (which is always the result of the exact algorithm).
+
+Sometimes the greedy algorithm does not return the maximum entropy summary tree for a given data set and value of $k$. This is to be expected -- it is not guaranteed to find the global maximum; in practice, it runs much faster than the exact algorithm, and often returns summary trees whose entropies are very close to that of the maximum entropy summary tree.
+
+The approximate algorithm is guaranteed to return a summary tree whose entropy is within $\epsilon$ of the global maximum entropy over all $k$-node summary trees. For small values of $\epsilon$, sometimes the approximation algorithm takes <i>longer</i> to run than the exact algorithm, because it rounds the weights <i>up</i>. In this case it obviously makes more sense to the the exact algorithm. We are working on a way to detect these situations in advance to avoid wasting time on a sub-optimal solution.
+
+For very basic visual EDA, we recommend the greedy algorithm, purely for speed reasons. Then, based on the size of your input tree, for more accurate summaries, we recommend the approximate or exact algorithm.
+
+Also note that the `greedy()` and `optimal()` functions return a list with three objects: `summary.trees`, which we have seen above and contains the list of summary trees for $k = 1, 2, ..., K$, as well as two additional objects: `data` and `tree`. The `data` object is a data.frame containing the input data (node, parent, weight, and label) after having been sorted by level, and then by parent. The `tree` object is a more compact representation of the tree's structure: a matrix with three columns, the first identifying the node ID of each parent in the tree, and the second and third columns containing the node IDs of the first and last child of each parent (which is possible because the nodes have been sorted within each level by parent).
+
+Ordering of the nodes and the production of the `tree` object is currently required by the C function that does the computation of the maximum entropy summary trees. It will most likely be deprecated in the future, as it's somewhat redundant.
+
+In the current version, though, after computing maximun entropy summary trees for a given data set, you should work with the `data` object returned by the `greedy()` or `optimal()` function, whose node ID numbers agree with those in the `summary.trees` object.
+
+## Visualization
+
+The main reason to compute maximum entropy summary trees is to visualize them, and the visuzlizaiton is more powerful when one can interactively transition among the $k$-node summary trees for $k = 1, ..., K$, where typically, $50 \leq K \leq 500$.
+
+In this section we show how the `summarytrees` package can be used to construct a web-based interactive visualization using d3.js. The process of creating the visualization is broken into two functions: `prepare.vis()` to convert data and plotting arguments from R objects to JSON to be read by the javascript, and `draw.vis()` to open up a browser on one's local machine to serve the visualization.
+
+The `prepare.vis()` function takes ten arguments:
+
+1. The first one, `tree.list`, is the list of $K$ summary trees that were computed by either `greedy()` or `optimal()`.
+
+2. The second argument, `labels`, is the full vector of labels from the input tree, in order from node 1 to $n$, <i>where this ordering comes from the post-processed edges</i>, which are returned to the user as the `data` attribute of the output of `greedy()` and `optimal()`.
+
+3. `tree` is the compact version of the tree, a matrix that contains the list of all unique parents in the tree, and the sequence of indices of each of their respective children.
+
+4. `legend.width` is the width, (in pixels), of the legend bar in the upper left-hand corner of the visualization, and is also used as the width and height of the entropy profile plot.
+
+5. `node.width` is the width (in pixels) of each level of the tree. The rectangular nodes themselves are scaled according to their individual weights. The `node.width` parameter must be greater than or equal to the `legend.width`.
+
+6. `node.height` is the height (in pixels) of each node.
+
+7. `units` is the designation of units that will be displayed in the legend.
+
+8. `print.weights` is a logical value for whether the weights of the summary tree nodes should be printed next to the labels.
+
+9. `legend.color` is the color of the legend bar, and is also used as the default color of the nodes if `color.level` is NULL.
+
+10. `color.level` determines whether nodes should be colored according to their ancestor at `color.level`. Often setting `color.level` to 2 or 3 helps visually track the ancestry of nodes in a summary tree with more than, say, 50 or 100 nodes.
+
+To demonstrate the visualization, let's first compute a larger set of summary trees for the Gauss subtree of the MGP using the greedy algorithm (to maximize speed):
+
+```{r greedy-large}
+t1 <- Sys.time()
+g <- greedy(node = Gauss[, "node"], 
+            parent = Gauss[, "parent"], 
+            weight = Gauss[, "weight"], 
+            label = Gauss[, "label"], 
+            K = 200)
+t2 <- Sys.time()
+t2 - t1
+```
+
+Now we call the `prepare.vis()` function to set up the data required to visualize this set of 200 summary trees:
+```{r prepare.vis}
+json <- prepare.vis(tree.list = g$summary.trees,
+                    labels = g$data[, "label"],
+                    tree = g$tree,
+                    legend.width = 120,
+                    node.width = 150,
+                    node.height = 12,
+                    units = "# of descendants",
+                    print.weights = TRUE,
+                    legend.color = "lightsteelblue",
+                    color.level = 2)
+```
+
+A call to `prepare.vis()` typically only takes a few seconds to run, since by definition it is only operating on a set of summary trees (rather than potentially large input data).
+
+Last, we call the function `draw.vis()` to open a browser and serve the visualization locally. It uses the `httd()` function from the `servr` package.
+
+``` {r draw.vis, eval=FALSE}
+draw.vis(json.object = json,
+         out.dir = tempfile(),
+         open.browser = interactive())
+```
+
+This visualization can be viewed at:
+
+[http://www.research.att.com/~kshirley/summarytrees/gauss](http://www.research.att.com/~kshirley/summarytrees/gauss)
+
+A few interesting things to note are:
+
+1. More than half of the descendants of Gauss are descendants of C. Gerling, one of Gauss's nine students.
+
+2. Gerling only has one student in the data set, Plucker, who himself only had one student in this data set, Klein. Only with Klein's 53 students does Gerling's branch "spread out", where, for $k = 100$, Klein has seven students that have children in the 100-node summary tree, and the rest are gathered in an "other" cluster.
+
+3. The difference between the 53-node maximum entropy summary tree and the 54-node tree is stark. In the 53-node summary tree, the Bessel node (dark green, level two) represent the entire Bessel subtree, with 5018 descendants. With a budget of 54 nodes, however, the entropy is maximized by expanding the Bessel subtree to show nine descendants of Bessel (in addition to Bessel himself), while aggregating some of the nodes from the 53-node summary tree. This illustrates the fact that maximum entropy summary trees are not nested.
+
+
+
+

@@ -43,7 +43,7 @@
 #'
 #' 3. The node identifiers (1, 2, ..., 43537) here are not the same
 #' identifiers used by the MGP (we mention this for clarification purposes).
-"gauss"
+"Gauss"
 
 #' File structure of the 'flare' software package
 #'

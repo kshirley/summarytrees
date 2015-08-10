@@ -6,7 +6,7 @@ R package for computation and visualization of summary trees
 
 `summarytrees` is an R package to help you summarize and visualize a potentially large data set that can be represented by a rooted, node-weighted tree.
 
-The input data looks something like the table below, containing the node ID, the ID of the node's parent, the node's (non-negative) weight, and its label. The example table pictured below contains a snapshot of the [DMOZ topic hierarchy](http://www.dmoz.org/) circa 2015, with over 635,000 nodes (unique topics) in the tree, where each node weight has been set to the number of URLs belonging to the given topic in the hierarchy. There are roughly 3.7 million total URLs (this is the sum of the weights):
+The input data looks something like the table below, containing the node ID, the ID of the node's parent, the node's (non-negative) weight, and its label. The example table pictured below contains a snapshot of the [DMOZ topic hierarchy](http://www.dmoz.org/) circa 2015, with over 635,000 nodes (unique topics) in the tree, where each node weight has been set to the number of URLs belonging to the given topic in the hierarchy. There are roughly 3.7 million total URLs (this is the sum of the weights). (The level of each node is also shown in the table, but is not required as input to compute summary trees.)
 
 |   node| parent| weight|label                                 | level|
 |------:|------:|------:|:-------------------------------------|-----:|
@@ -21,15 +21,25 @@ The input data looks something like the table below, containing the node ID, the
 | 635854| 635062|      1|Maronite                              |    15|
 | 635855| 635074|      3|Wirtschaftsprüfung_und_Steuerberatung |    15|
 
-The `summarytrees` package implements a dynamic programming algorithm that aggregates the nodes of the input tree in an optimal way, maximizing the entropy of the distribution of the node weights of the aggregated tree among all possible aggregations of a given size, subject to certain constraints. The resulting set of *summary trees* are visualized using d3.js to allow for exploratory data analysis of the strucure and weight distribution of the input tree. Below is a snapshot of the 18-node maximum entropy summary tree of the DMOZ data:
+The `summarytrees` package implements a dynamic programming algorithm that aggregates the nodes of the input tree in an optimal way, maximizing the entropy of the distribution of the node weights of the aggregated tree among all possible aggregations of a given size, subject to certain constraints. The resulting set of *summary trees* can be visualized using d3.js to allow for exploratory data analysis of the strucure and weight distribution of the input tree. Below is a snapshot of the 18-node maximum entropy summary tree of the DMOZ data:
 
+<!--
 ![summarytrees preview](http://www2.research.att.com/~kshirley/figures/dmoz-readme.png)
+-->
 
 #### Demonstrations
 
-For a demonstration of the interactive visualization of a set of maximum entropy summary trees for a given data set, visit one of the links below:
+For a demonstration of the interactive visualization of a set of maximum entropy summary trees for a given data set, visit one of the links in the first columns of the table below. In the table, the running times reported for each data set are from a single run (not averaged over multiple runs) computing maximum entropy summary trees for $k = 1, 2, .., K = 100$ on a single machine with a 2.67 GHz CPU and 48GB of RAM). See Section 7 of [our paper](http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf) for more details.
 
-Insert a table here with examples, summary stats, computation times, and links to the visualizations.
+|Data           | # Nodes| Total Weight| Max Depth|Optimal |Approx ($\epsilon = 0.1$) |Approx ($\epsilon = 0.5$) |Greedy |
+|:--------------|-------:|------------:|---------:|:-------|:--------------------------|:--------------------------|:------|
+|Web Traffic    |   19335|    260276921|        17|  --    |6:08                       |1:02                       |0:05   |
+|Hard Drive     |   15671|       146933|         7|27:58   |16:59                      |2:11                       |0:02   |
+|Tree of Life   |   94080|        54121|       123|6:04    |18:18                      |2:30                       |0:13   |
+|Math Genealogy |   43527|        43527|        17|6:16    |19:37                      |3:31                       |0:05   |
+|Org Chart      |   43134|        43134|        10|2:19    |6:12                       |0:55                       |0:03   |
+|DMOZ           |  635855|      3776432|        15|  --    |44:10                      |8:11                       |1:03   |
+|R Source       |    4704|     77420268|         8|  --    |5:09                       |0:59                       |0:01   |
 
 #### Installation
 
@@ -39,20 +49,31 @@ library(devtools)
 install_github("kshirley/summarytrees")
 ```
 
+It has been tested on a Mac OS X 10.9.5, using R version 3.1.2, Chrome Version 44.0.2403.130 (64-bit), and Firefox 39.0. More testing is planned for the near future.
+
 #### Vignettes
 
-There are two vignettes included with the package, and the data associated with each vignette is also included with the package.
+There are three vignettes included with the package.
+<!--
+and the data associated with each vignette is also included with the package.
+-->
 
-The first vignette contains an analysis of the Carl Gauss subtree of the Math Genealogy Project (MGP), where the hierarchy of the tree is defined by the advisor-student relationships among mathematicians (starting with Carl Gauss as an advisor) and the node weight for each mathematician is set to 1 by default. To load the vignette, type:
+1. The first vignette contains an analysis of the Carl Gauss subtree of the Math Genealogy Project (MGP), where the hierarchy of the tree is defined by the advisor-student relationships among mathematicians (starting with Carl Gauss as an advisor) and the node weight for each mathematician is set to 1 by default. To load the vignette, type:
 ```{r}
-vignette("gauss", package = "summarytrees")
+vignette("Gauss", package = "summarytrees")
 ```
-[Note: This sample of data has been shared with the permission and cooperation of the MGP; please do not re-distribute it. See `help("gauss", package = "summarytrees")` for more.]
+Note: This sample of data has been shared with the permission and cooperation of the Math Genealogy Project; please do not re-distribute it. See `help("Gauss", package = "summarytrees")` for more.
 
-The second vignette contains an analysis of the file structure of the source code of R (version 3.2.1), where node weights are set to the sizes (in bytes) of the files in the source code of R, and the directory structure defines the hierarchy.
+2. The second vignette contains an analysis of the file structure of the source code of R (version 3.2.1), where node weights are set to the sizes (in bytes) of the files, and the directory structure defines the hierarchy.
 ```{r}
 vignette("Rsource", package = "summarytrees")
 ```
+
+3. The third vignette contains an analysis of the DMOZ (aka Open Directory Project) directory of websites. In thie data set, approximately 3.7 million URLs are categorized into a depth-15 hierarchy with ~600,000 unique topics (categories). The input tree node weights are set to the number of URLs belonging to each topic in the hierarchy.
+```{r}
+vignette("DMOZ", package = "summarytrees")
+```
+
 
 #### Documentation/Help
 
