@@ -38,7 +38,7 @@ To see some demos, visit one of the links in the first column of the table below
 |[Math Genealogy](http://www.research.att.com/~kshirley/summarytrees/gauss) |   43527|        43527|        17|6:16    |19:37                      |3:31                       |0:05   |
 |Org Chart      |   43134|        43134|        10|2:19    |6:12                       |0:55                       |0:03   |
 |[DMOZ](http://www.research.att.com/~kshirley/summarytrees/dmoz)           |  635855|      3776432|        15|  --    |44:10                      |8:11                       |1:03   |
-|R Source       |    4704|     77420268|         8|  --    |5:09                       |0:59                       |0:01   |
+|[R Source](http://www.research.att.com/~kshirley/summarytrees/Rsource)       |    4704|     77420268|         8|  --    |5:09                       |0:59                       |0:01   |
 
 #### Installation
 
