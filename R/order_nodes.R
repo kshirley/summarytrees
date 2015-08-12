@@ -27,7 +27,7 @@
 #' each node in the tree. Used in this function only for breaking ties
 #' in ordering of children.
 #'
-#' @return list containing two elements: \code{tree}, an integer matrix
+#' @return list containing three elements: \code{tree}, an integer matrix
 #' with three columns and as many rows
 #' as there are parent nodes in the tree.
 #' The first column contains the indices of the parent nodes in
@@ -37,7 +37,8 @@
 #' data.frame containing five columns: node, parent, weights, labels,
 #' and level, which is equal to 1 for the root of the tree. This
 #' data.frame is returned because the ordering of the nodes may be
-#' changed by running this function.
+#' changed by running this function. Third, \code{order}, which is the
+#' new ordering of the nodes.
 #'
 #' @export
 #'
@@ -46,6 +47,9 @@ order.nodes <- function(node = integer(), parent = integer(),
 
   # Check the inputs:
   n <- length(node)
+  if (length(node) < 2) {
+    stop("Error: Tree must contain more than one node.")
+  }
   if (any(duplicated(node))) {
   	stop("Error: Each element of 'node' must be unique")
   }
@@ -81,7 +85,8 @@ order.nodes <- function(node = integer(), parent = integer(),
   print("Computing node levels")
   while (n.zero > 0) {
     current.level <- current.level + 1
-    level[parent %in% node[level == current.level - 1]] <- current.level
+    in.this.level <- parent %in% node[level == current.level - 1]
+    level[in.this.level] <- current.level
     n.zero <- sum(level == 0)
   }
   D <- max(level)
@@ -127,18 +132,22 @@ order.nodes <- function(node = integer(), parent = integer(),
   #  first.child[i] <- min(which(data[, "parent"] == i))
   #  last.child[i] <- max(which(data[, "parent"] == i))
   #}
-
-  d <- diff(data[, "parent"])
-  w <- which(d != 0)
-  parent.vector <- unique(data[, "parent"])[-1]
-  first.child <- (2:n)[w]
-  last.child <- (2:n)[c(w[2:length(w)], n) - 1]
-  tree <- cbind(parent.vector, first.child, last.child)
-  tree <- tree[order(tree[, 1]), ]
-
   # gather into a data.frame called "child.index":
   #tree <- cbind(sort(unique(data[, "parent"]))[-1],
   #              first.child[first.child != 0],
   #              last.child[last.child != 0])
-  return(list(tree = tree, data = data))
+
+  # Faster way to compute vector of child indices for each parent
+  d <- diff(data[, "parent"])
+  w <- c(which(d != 0), n)
+  parent.vector <- unique(data[, "parent"])[-1]
+  first.child <- (2:n)[w[-length(w)]]
+  last.child <- (2:n)[w[-1] - 1]
+  tree <- cbind(parent.vector, first.child, last.child)
+  tree <- tree[order(tree[, 1]), , drop = FALSE]
+  if (sum(tree[, 3] - tree[, 2] + 1) != n - 1) {
+    stop("Error occurred while indexing children of each parent")
+  }
+
+  return(list(tree = tree, data = data, order = o))
 }

@@ -24,7 +24,7 @@ each node in the tree. Used in this function only for breaking ties
 in ordering of children.}
 }
 \value{
-list containing two elements: \code{tree}, an integer matrix
+list containing three elements: \code{tree}, an integer matrix
 with three columns and as many rows
 as there are parent nodes in the tree.
 The first column contains the indices of the parent nodes in
@@ -34,7 +34,8 @@ of the last child node of each parent node. Second, \code{data}, a
 data.frame containing five columns: node, parent, weights, labels,
 and level, which is equal to 1 for the root of the tree. This
 data.frame is returned because the ordering of the nodes may be
-changed by running this function.
+changed by running this function. Third, \code{order}, which is the
+new ordering of the nodes.
 }
 \description{
 Convert two integer vectors containing node identifiers and
