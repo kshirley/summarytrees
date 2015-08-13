@@ -371,7 +371,7 @@ void Roptimal(int *R_K, int *R_n, int *R_numparents,
   
   
   // seed = time(0); srand48(seed);
-  seed = 0; srand48(seed);
+  seed = 0; srand(seed);
   
   //printf("Don't forget to change stacksize via 'limit stacksize 100000'\n");
   //printf("Enter K=maximum value of k: ");
