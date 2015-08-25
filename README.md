@@ -24,9 +24,6 @@ The input data looks something like the table below, containing the node ID, the
 
 The `summarytrees` package implements a dynamic programming algorithm that aggregates the nodes of the input tree in an optimal way, maximizing the entropy of the distribution of the node weights of the aggregated tree among all possible aggregations of a given size, subject to certain constraints. The resulting set of *summary trees* can be visualized using d3.js to allow for exploratory data analysis of the strucure and weight distribution of the input tree. Below is a snapshot of the 18-node maximum entropy summary tree of the DMOZ data:
 
-<!--
-![summarytrees preview](http://www.research.att.com/~kshirley/figures/dmoz-readme.png)
--->
 <a href='http://www.research.att.com/~kshirley/summarytrees/dmoz'>
 <img src='http://www.research.att.com/~kshirley/figures/dmoz-readme.png'>
 </a>
@@ -59,12 +56,13 @@ It has been developed on a Mac OS X 10.9.5, using R version 3.1.2, Chrome Versio
 
 There are two vignettes included with the package.
 
-1. The "Gauss" vignette contains an analysis of the Carl Gauss subtree of the Math Genealogy Project (MGP), where the hierarchy of the tree is defined by the advisor-student relationships among mathematicians (starting with Carl Gauss as an advisor) and the node weight for each mathematician is set to 1 by default. To load the vignette, type:
+1\. The "Gauss" vignette contains an analysis of the Carl Gauss subtree of the Math Genealogy Project (MGP), where the hierarchy of the tree is defined by the advisor-student relationships among mathematicians (starting with Carl Gauss as an advisor) and the node weight for each mathematician is set to 1 by default. To load the vignette, type:
 ```{r}
 vignette("Gauss", package = "summarytrees")
 ```
 Note: This sample of data has been shared with the permission and cooperation of the Math Genealogy Project; please do not re-distribute it. See `help("Gauss", package = "summarytrees")` for more.
-2. The "DMOZ" vignette contains an analysis of the DMOZ (aka Open Directory Project) directory of websites. In thie data set, approximately 3.7 million URLs are categorized into a depth-15 hierarchy with ~600,000 unique topics (categories). The input tree node weights are set to the number of URLs belonging to each topic in the hierarchy.
+
+2\. The "DMOZ" vignette contains an analysis of the DMOZ (aka Open Directory Project) directory of websites. In thie data set, approximately 3.7 million URLs are categorized into a depth-15 hierarchy with ~600,000 unique topics (categories). The input tree node weights are set to the number of URLs belonging to each topic in the hierarchy.
 ```{r}
 vignette("DMOZ", package = "summarytrees")
 ```
