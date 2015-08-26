@@ -8,36 +8,93 @@
 #' algorithm runs substantially faster than the optimal algorithm, which
 #' is also described in the paper in the references.
 #'
-#' @param node integer vector containing a set of positive, unique, integers
+#' @param node integer vector containing a set of positive, unique integers
 #' denoting the identities of the nodes of the tree
 #'
 #' @param parent integer vector containing the (positive integer) id of the
-#' parent of each node in the tree. One  and only one element of
-#' \code{parents} must be set to zero, indicating which node is the root of
+#' parent of each node in the tree. One and only one element of
+#' \code{parent} must be set to zero, indicating which node is the root of
 #' the tree.
 #'
 #' @param weight numeric vector containing non-negative weight of each node
 #' in the tree.
 #'
-#' @param label character vector containing labels for each node in the tree
+#' @param label character vector containing the label for each node in the tree
 #'
 #' @param K integer. The number of nodes in the largest summary tree.
 #'
-#' @return A length-K list of matrices, where each matrix represents the
-#' summary tree with K nodes. The kth matrix contains k rows and 4 columns.
-#' (describe the columns later...)
+#' @return A list of four objects:
+#' \enumerate{
+#'   \item \code{data} a data frame containing the re-ordered input data,
+#'   as returned by the \code{\link{order.nodes}} function, including the level
+#'   of each node.
+#'   \item \code{tree} a matrix containing the structure of the tree as
+#'   returned by the \code{\link{order.nodes}} function.
+#'   \item \code{summary.trees} a length-K list of matrices, where each matrix
+#'   represents the
+#'   summary tree with K nodes. The kth matrix contains k rows and 5 columns:
+#'   \enumerate{
+#'     \item the first column contains the node ID, which is NA if the node in
+#'     the summary tree is an 'other' cluster
+#'     \item the second column contains the ID of the node's parent
+#'     \item the third column contains the weight of the node in the summary
+#'     tree
+#'     \item the fourth column contains the 'type' of node in the summary tree,
+#'     where 1 indicates a singleton (whose weight in the summary tree is equal
+#'     to its weight in the input tree), 2 indicates a subtree (whose weight in
+#'     the summary tree is equal to the sum of the weights of the nodes in its
+#'     subtree in the input tree), and 3 indicates an 'other cluster'.
+#'     \item the fifth column contains the label, which is the same as the input
+#'     label for summary tree nodes of type = 1 or type = 2, but for summary
+#'     tree nodes of type 3, the label is 'x others' where 'x' indicates how
+#'     many sibling nodes comprise the 'other' cluster.
+#'   }
+#'   \item \code{entropy} a (K x 2) matrix containing the entropy of each
+#'   summary tree
+#' }
 #'
-#' @references \url{http://www2.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf}
+#' @references \url{http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf}
 #'
 #' @useDynLib summarytrees
 #'
 #' @export
 #'
+#' @examples
+#' data(Gauss)  # load the sample from the Math Genealogy tree
+#'
+#' # abbreviate the original full-name labels by first initial + last name:
+#' last <- sapply(strsplit(Gauss[, "label"], " "), function(x) x[length(x)])
+#' first.initial <- substr(Gauss[, "label"], 1, 1)
+#' new.label <- paste(first.initial, last, sep = " ")
+#'
+#' x <- greedy(node = Gauss[, "node"],
+#'             parent = Gauss[, "parent"],
+#'             weight = Gauss[, "weight"],
+#'             label = new.label,
+#'             K = 50)
+#'
+#' # look at a few pieces of the output:
+#'
+#' # The first 10 rows of the re-ordered input data
+#' x$data[1:10, ]
+#'
+#' # The first 10 rows of the 'tree' representation of the data:
+#' x$tree[1:10, ]
+#'
+#' # The 5-node summary tree
+#' x$summary.trees[[5]]
+#'
+#' # The 20-node summary tree:
+#' x$summary.trees[[20]]
+#'
+#' # The entropy sequence, a (K x 2) matrix with entropies in the second column
+#' x$entropy
+#'
 greedy <- function(node = integer(), parent = integer(), weight = numeric(),
                    label = character(), K = integer()) {
 
   # convert the node-parent input data to the parent-children data required by
-  # the program:
+  # the C program:
   new <- order.nodes(node = node, parent = parent,
                      weight = weight, label = label)
   tree <- new$tree
@@ -112,10 +169,10 @@ greedy <- function(node = integer(), parent = integer(), weight = numeric(),
     lab.vec <- data[out[[k]][, "node"], "label"]
 
     # set up the labels for the 'other' clusters in the summary tree:
-    sel <- out[[k]][, "type"] == 3  # indicates that this node is an "other" cluster
+    # type = 3 indicates that this node is an 'other' cluster
+    sel <- out[[k]][, "type"] == 3
     if (sum(sel) > 0) {
       parent.vec <- data[out[[k]][sel, "node"], "parent"]
-      #out[[k]][sel, "node"] <- parent.vec
       for (i in 1:sum(sel)){
         total.children <- tree[tree[, 1] == parent.vec[i], 3] - tree[tree[, 1] == parent.vec[i], 2] + 1
         not.in.cluster <- sum(data[out[[k]][, "node"], "parent"] == parent.vec[i]) - 1
@@ -123,15 +180,8 @@ greedy <- function(node = integer(), parent = integer(), weight = numeric(),
         lab.vec[sel][i] <- paste(num.other.cluster, "others", sep=" ")
       }
     }
-    # code to reset node numbers in summary tree to 1:n
-    #new.parent <- match(data[out[[k]][, "node"], "parent"], data[out[[k]][, "node"], "node"])
-    #new.node <- 1:k
-    #new.parent[1] <- 0
-    #final[[k]] <- data.frame(node = new.node,
-    #                         parent = new.parent,
-    #                         weight = out[[k]][, "weight"],
-    #                         label = lab.vec,
-    #                         stringsAsFactors = FALSE)
+
+    # assemble in a data.frame:
     final[[k]] <- data.frame(node = out[[k]][, "node"],
                              parent = data[out[[k]][, "node"], "parent"],
                              weight = out[[k]][, "weight"],
@@ -143,7 +193,18 @@ greedy <- function(node = integer(), parent = integer(), weight = numeric(),
     rownames(final[[k]]) <- 1:k
     final[[k]][final[[k]][, "type"] == 3, 1] <- NA
   }
-  return(list(data = data, tree = tree, summary.trees = final))
+
+  # Compute entropy of each of the K trees:
+  norm <- function(x) if (sum(x) == 0) numeric(length(x)) else x/sum(x)
+  xlogx <- function(x) ifelse(x == 0, 0, x*log(x, 2))
+  ent <- function(x) -sum(xlogx(norm(x)))
+  ent.vec <- sapply(final, function(x) ent(x[, "weight"]))
+  entropy <- cbind(k = 1:K, entropy = ent.vec)
+
+  return(list(data = data,
+              tree = tree,
+              summary.trees = final,
+              entropy = entropy))
 }
 
 

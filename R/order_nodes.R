@@ -96,10 +96,7 @@ order.nodes <- function(node = integer(), parent = integer(),
                      stringsAsFactors = FALSE)
 
   # order by level, then parent, then weight, then label:
-  # here we re-order the whole data each time, for each level
-  # probably only need to do this for the nodes at a given level
-  # come back later to improve this (to speed it up)
-  o <- do.call(order, data[, c(5, 2, 3, 4)])
+  o <- do.call(order, data[, c("level", "parent", "weight", "label")])
   data <- data[o, ]
   data[, "parent"] <- match(data[, "parent"], data[, "node"])
   data[, "node"] <- 1:n
@@ -148,6 +145,7 @@ order.nodes <- function(node = integer(), parent = integer(),
   if (sum(tree[, 3] - tree[, 2] + 1) != n - 1) {
     stop("Error occurred while indexing children of each parent")
   }
+  colnames(tree)[1] <- "parent"
 
   return(list(tree = tree, data = data, order = o))
 }
