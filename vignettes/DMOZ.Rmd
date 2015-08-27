@@ -143,7 +143,7 @@ draw.vis(json.object = json,
          open.browser = interactive())
 ```
 
-To see this set of 100 maximum entropy summary trees, go [here](http://research.att.com/~kshirley/summarytrees/dmoz).
+To see this set of 100 maximum entropy summary trees, go [here](http://www.research.att.com/~kshirley/summarytrees/dmoz).
 
 From the visualization, we can see that:
 
