@@ -17,7 +17,7 @@ knitr::opts_chunk$set(collapse = FALSE, comment = "#>", cache = TRUE)
 
 This vignette demonstrates how to compute and visualize maximum entropy summary trees. Maximum entropy summary trees are a useful way to summarize and visualize a data set that can be represented by a rooted, node-weighted trees, where the node weights are non-negative.
 
-One such data set is the Math Genealogy Tree, which is hosted and managed by the [Math Genealogy Project](http://genealogy.math.ndsu.nodak.edu/). The Math genealogy tree contains information about the advisor-student relationships between mathematicians and scientists in related fields (such as statistics) who have, at some point in history, earned a Ph.D. Technically, the math genealogy tree is not a tree, since some students have multiple advisors (for more on this, see [here]()), but we forced the graph to be a tree by assigning each student to their primary advisor (thus removing some edges of the graph). The MGP has kindly agreed to allow us to share a sample from their data: the subtree rooted at Carl Gauss. For more on this sample of data, see `{r help("Gauss", package = "summarytrees")}.
+One such data set is the Math Genealogy Tree, which is hosted and managed by the [Math Genealogy Project](http://genealogy.math.ndsu.nodak.edu/). The Math genealogy tree contains information about the advisor-student relationships between mathematicians and scientists in related fields (such as statistics) who have, at some point in history, earned a Ph.D. Technically, the math genealogy tree is not a tree, since some students have multiple advisors (for more on this, see [here](http://genealogy.math.ndsu.nodak.edu/extrema.php)), but we forced the graph to be a tree by assigning each student to their primary advisor (thus removing some edges of the graph). The MGP has kindly agreed to allow us to share a sample from their data: the subtree rooted at Carl Gauss. For more on this sample of data, see `{r help("Gauss", package = "summarytrees")}`.
 
 First, load the package:
 ```{r libraries}
@@ -36,7 +36,7 @@ head(Gauss)
 
 There are four columns in the data.frame: node, parent, weight, and label, where `node` and `parent` are non-negative integer ID numbers (with each node ID number being unique), weight is a non-negative numeric value indicating the weight of each node, and `label` is a character vector of node labels (which need not be unique). There must be exactly one element of `parent` set to 0, indicating the root node of the tree.
 
-Note that Carl Gauss has 43,527 total descendants in this version of the data, which is based on a snapshot of the data from June, 2012 (and also depends on our method for edge removal to coerce the graph to a tree). We assigned a weigth of one to each node (mathematician) in the tree, although you could imagine using different weight schemes to answer different questions (weights could be the number of papers written, an indicator of one's nationality being equal to some particular country, or an indicator of one's home university being equal to some university of interest, for example).
+Note that Carl Gauss has 43,527 total descendants in this version of the data, which is based on a snapshot of the data from June, 2012 (and also depends on our method for edge removal to coerce the graph to a tree). We assigned a weight of one to each node (mathematician) in the tree, although you could imagine using different weight schemes to answer different questions (weights could be the number of papers written, an indicator of one's nationality being equal to some particular country, or an indicator of one's home university being equal to some university of interest, for example).
 
 The first thing we'll do is abbreviate the labels to the first initial + last name:
 ```{r abbreviate-names}
@@ -45,7 +45,7 @@ first.initial <- substr(Gauss[, "label"], 1, 1)
 Gauss[, "label"] <- paste(first.initial, last, sep = " ")
 ```
 
-Next, we compute the maximum entropy $k$-node summary trees for $k = 1, 2, ..., 10$ using three different versions of the algorithm. Setting a maximum size of $K = 10$ isn't very realistic -- this is just to illustrate the syntax for all three functions.
+Next, we compute the maximum entropy $k$-node summary trees for $k = 1, 2, ..., 10$ using three different versions of the algorithm. Setting a maximum size of $K = 10$ isn't very realistic -- this is just to illustrate the syntax for the main functions.
 
 ## Greedy Algorithm:
 ```{r greedy-Gauss}
@@ -91,6 +91,14 @@ g$summary.trees[[10]]
 e$summary.trees[[10]]
 a$summary.trees[[10]]
 ```
+
+The `summary.trees` object returned by `greedy()` or `optimal()` is a list of length $K$, where the $k^{th}$ element (for $k = 1, 2, ..., K$) contains the $k$-node summary tree, represented as a matrix with five columns. (In the case of `optimal()` with `epsilon = 0`, the summary trees are <i>maximum entropy</i> summary trees -- otherwise not necessarily.)
+
+1. The first column contains the node ID, which is `NA` if the node in the summary tree is an 'other' cluster.
+2. The second column contains the ID of the node's parent.
+3. The third column contains the weight of the node in the summary tree.
+4. The fourth column contains the 'type' of node in the summary tree, where 1 indicates a singleton (whose weight in the summary tree is equal to its weight in the input tree), 2 indicates a subtree (whose weight in the summary tree is equal to the sum of the weights of the nodes in its subtree in the input tree), and 3 indicates an 'other cluster'.
+5. The fifth column contains the label, which is the same as the input label for summary tree nodes of type = 1 or type = 2, but for summary tree nodes of type 3, the label is 'x others' where 'x' indicates how many sibling nodes comprise the 'other' cluster.
 
 ```{r check-equality}
 all.equal(g$summary.trees[[10]], e$summary.trees[[10]])

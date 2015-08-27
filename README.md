@@ -83,6 +83,6 @@ The original paper describing the algorithm and resulting visualizations is:
 
 A copy of the paper is available [here](http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf).
 
-A website describing the work is [here](http://www.research.att.com/~kshirley/summarytrees.html).
+A website describing the work is [here](http://www.research.att.com/~kshirley/summarytrees).
 
 
