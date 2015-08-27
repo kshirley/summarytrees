@@ -85,7 +85,7 @@ t2 <- Sys.time()
 t2 - t1
 ```
 
-To compare the resulting 20-node summary trees, for example, we can print them to the screen:
+To compare the resulting 10-node summary trees, for example, we can print them to the screen:
 ```{r print-st}
 g$summary.trees[[10]]
 e$summary.trees[[10]]
