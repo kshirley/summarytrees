@@ -1,8 +1,12 @@
 ---
 title: "DMOZ"
-author: "Kenny Shirley"
-date: "August 9, 2015"
-output: html_document
+author: "Kenneth E. Shirley"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{DMOZ}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 Here we'll describe how to compute maximum entropy summary trees to visualize the topic hierarcy of the URLs in DMOZ (aka the Open Directory Project).

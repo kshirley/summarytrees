@@ -47,7 +47,7 @@ To see some demos, visit one of the links in the first column of the table below
 The `summarytrees` package is still under development, and is currently available here on Github, but not yet on CRAN. To install it, type
 ```{r}
 library(devtools)
-install_github("kshirley/summarytrees")
+install_github("kshirley/summarytrees", build_vignettes = TRUE)
 ```
 
 It has been developed on a Mac OS X 10.9.5, using R version 3.1.2, Chrome Version 44.0.2403.130 (64-bit), and Firefox 39.0. More testing is planned for the near future to make sure it all works in multiple environments.

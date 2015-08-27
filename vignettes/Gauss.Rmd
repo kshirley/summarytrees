@@ -4,7 +4,7 @@ author: "Kenneth E. Shirley"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Summary Trees Example: Math Genealogy Tree}
+  %\VignetteIndexEntry{Gauss}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
