@@ -20,8 +20,16 @@ First, we downloaded the DMOZ "content" data in April of 2015 from [http://www.d
 Next, we use the command line to extract just the assigned topic of each of the approximately 3.77 million URLs and write them, one per line, to a file called "dmoz-topics.txt".
 
 <pre>
+<code>
 grep "<topic>" content.rdf.u8 | sed 's/<topic>//g' | sed 's/<\/topic>//g' | sed 's/^    //g' > dmoz-topics.txt
+</code>
 </pre>
+
+<!--
+<pre>
+grep "&#60;topic&#62;" content.rdf.u8 | sed 's/&#60;topic&#62;//g' | sed 's/&#60;\/topic&#62;//g' | sed 's/^    //g' &#62; dmoz-topics.txt
+</pre>
+-->
 
 Next, we read this list of topics into R and compute their frequencies:
 ``` {r, dmoz-read}
