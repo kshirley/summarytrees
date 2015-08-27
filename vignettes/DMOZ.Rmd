@@ -9,6 +9,10 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
+```{r setup, echo = FALSE}
+knitr::opts_chunk$set(collapse = FALSE, comment = "#>", cache = TRUE)
+```
+
 Here we'll describe how to compute maximum entropy summary trees to visualize the topic hierarcy of the URLs in DMOZ (aka the Open Directory Project).
 
 First, we downloaded the DMOZ "content" data in April of 2015 from [http://www.dmoz.org/rdf.html](http://www.dmoz.org/rdf.html). This file was about 1.8 GB unzipped.
