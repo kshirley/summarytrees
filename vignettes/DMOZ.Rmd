@@ -21,12 +21,6 @@ Next, we use the command line to extract just the assigned topic of each of the 
 
     grep "<topic>" content.rdf.u8 | sed 's/<topic>//g' | sed 's/<\/topic>//g' | sed 's/^    //g' > dmoz-topics.txt
 
-<!--
-<pre>
-grep "&#60;topic&#62;" content.rdf.u8 | sed 's/&#60;topic&#62;//g' | sed 's/&#60;\/topic&#62;//g' | sed 's/^    //g' &#62; dmoz-topics.txt
-</pre>
--->
-
 Next, we read this list of topics into R and compute their frequencies:
 ``` {r, dmoz-read}
 raw <- readLines("~/Stats/Trees/dmoz/dmoz-topics.txt")
@@ -85,7 +79,7 @@ t2 - t1
 ```
 
 
-Now we compute the labels, we assemble the nodes, parents, weights, and labels in a data.frame, and we clean up one pseudo-node that was computed as the parent of the root.
+Now we compute the labels, we assemble the nodes, parents, weights, and labels in a data frame, and we clean up one pseudo-node that was computed as the parent of the root.
 
 ``` {r assemble}
 label <- sapply(strsplit(full.node, "/"), function(x) tail(x, 1))

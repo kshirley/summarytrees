@@ -23,7 +23,7 @@
 #' the approximate algorithm will have entropy within \code{epsilon} of the
 #' maximal entropy of a k-node summary tree.
 #'
-#' @return A list of four objects:
+#' @return A list of five objects:
 #' \enumerate{
 #'   \item \code{data} a data frame containing the re-ordered input data,
 #'   as returned by the \code{\link{order.nodes}} function, including the level
@@ -51,6 +51,8 @@
 #'   }
 #'   \item \code{entropy} a (K x 2) matrix containing the entropy of each
 #'   summary tree
+#'   \item \code{order} the ordering applied to the original rows of data to
+#'   produce the 'data' object returned by this function
 #' }
 #'
 #' @references \url{http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf}
@@ -67,6 +69,7 @@
 #' first.initial <- substr(Gauss[, "label"], 1, 1)
 #' new.label <- paste(first.initial, last, sep = " ")
 #'
+#' \dontrun{
 #' x <- optimal(node = Gauss[, "node"],
 #'              parent = Gauss[, "parent"],
 #'              weight = Gauss[, "weight"],
@@ -91,6 +94,14 @@
 #' # The entropy sequence, a (K x 2) matrix with entropies in the second column
 #' x$entropy
 #'
+#' # If you want to reconcile your original copy of the data with the newly
+#' # ordered version, check it:
+#' s <- sample(dim(Gauss)[1], 10)  # randomly select a few rows
+#' Gauss[x$order, ][s, ]
+#' x$data[s, ]
+#' # the node IDs and parent IDs will be different, but the weights and labels
+#' # will match.
+#'
 #' # Use the approximate algorithm:
 #' x <- optimal(node = Gauss[, "node"],
 #'              parent = Gauss[, "parent"],
@@ -98,6 +109,7 @@
 #'              label = new.label,
 #'              K = 50,
 #'              epsilon = 0.5)
+#' }
 #'
 #'
 optimal <- function(node = integer(), parent = integer(), weight = numeric(),
@@ -222,5 +234,6 @@ optimal <- function(node = integer(), parent = integer(), weight = numeric(),
   return(list(data = data,
               tree = tree,
               summary.trees = final,
-              entropy = entropy))
+              entropy = entropy,
+              order = new$order))
 }

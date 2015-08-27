@@ -23,7 +23,7 @@ in the tree.}
 \item{K}{integer. The number of nodes in the largest summary tree.}
 }
 \value{
-A list of four objects:
+A list of five objects:
 \enumerate{
   \item \code{data} a data frame containing the re-ordered input data,
   as returned by the \code{\link{order.nodes}} function, including the level
@@ -51,6 +51,8 @@ A list of four objects:
   }
   \item \code{entropy} a (K x 2) matrix containing the entropy of each
   summary tree
+  \item \code{order} the ordering applied to the original rows of data to
+  produce the 'data' object returned by this function
 }
 }
 \description{
@@ -58,7 +60,8 @@ Compute a series of summary trees for a given
 input tree using a greedy algorithm. This algorithm returns summary
 trees whose entropies are typically within 5\% of the maximum
 possible entropy (based on a series of experiments described by
-the paper cited in the references). The
+the paper cited in the references), but there is no performace guarantee
+such as that provided by the approximation algorithm. The greedy
 algorithm runs substantially faster than the optimal algorithm, which
 is also described in the paper in the references.
 }
@@ -92,6 +95,14 @@ x$summary.trees[[20]]
 
 # The entropy sequence, a (K x 2) matrix with entropies in the second column
 x$entropy
+
+# If you want to reconcile your original copy of the data with the newly
+# ordered version, check it:
+s <- sample(dim(Gauss)[1], 10)  # randomly select a few rows
+Gauss[x$order, ][s, ]
+x$data[s, ]
+# the node IDs and parent IDs will be different, but the weights and labels
+# will match.
 }
 \references{
 \url{http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf}

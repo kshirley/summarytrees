@@ -34,7 +34,7 @@ dim(Gauss)
 head(Gauss)
 ```
 
-There are four columns in the data.frame: node, parent, weight, and label, where `node` and `parent` are non-negative integer ID numbers (with each node ID number being unique), weight is a non-negative numeric value indicating the weight of each node, and `label` is a character vector of node labels (which need not be unique). There must be exactly one element of `parent` set to 0, indicating the root node of the tree.
+There are four columns in the data frame: node, parent, weight, and label, where `node` and `parent` are non-negative integer ID numbers (with each node ID number being unique), weight is a non-negative numeric value indicating the weight of each node, and `label` is a character vector of node labels (which need not be unique). There must be exactly one element of `parent` set to 0, indicating the root node of the tree.
 
 Note that Carl Gauss has 43,527 total descendants in this version of the data, which is based on a snapshot of the data from June, 2012 (and also depends on our method for edge removal to coerce the graph to a tree). We assigned a weight of one to each node (mathematician) in the tree, although you could imagine using different weight schemes to answer different questions (weights could be the number of papers written, an indicator of one's nationality being equal to some particular country, or an indicator of one's home university being equal to some university of interest, for example).
 
@@ -113,7 +113,11 @@ The approximate algorithm is guaranteed to return a summary tree whose entropy i
 
 For very basic visual EDA, we recommend the greedy algorithm, purely for speed reasons. Then, based on the size of your input tree, for more accurate summaries, we recommend the approximate or exact algorithm.
 
-Also note that the `greedy()` and `optimal()` functions return a list with four objects: `summary.trees`, which we have seen above and contains the list of summary trees for $k = 1, 2, ..., K$, as well as three additional objects: `data`, `tree`, and `entropy`. The `data` object is a data frame containing the input data (node, parent, weight, and label) after having been sorted by level, and then by parent (and then by weight and label, although those last two steps aren't absolutely necessary for the algorithm to run). The `tree` object is a more compact representation of the tree's structure: a matrix with three columns, the first identifying the node ID of each parent in the tree, and the second and third columns containing the node IDs of the first and last child of each parent (which is possible because the nodes have been sorted within each level by parent). The `entropy` object is a $K x 2$ matrix where the second column contains the entropies of the $K$ summary trees that are returned.
+Also note that the `greedy()` and `optimal()` functions return a list with five objects: `summary.trees`, which we have seen above and contains the list of summary trees for $k = 1, 2, ..., K$, as well as four additional objects: `data`, `tree`, `entropy`, and `order`.
+- The `data` object is a data frame containing the input data (node, parent, weight, and label) after having been sorted by level, and then by parent (and then by weight and label, although those last two steps aren't absolutely necessary for the algorithm to run).
+- The `tree` object is a more compact representation of the tree's structure: a matrix with three columns, the first identifying the node ID of each parent in the tree, and the second and third columns containing the node IDs of the first and last child of each parent (which is possible because the nodes have been sorted within each level by parent).
+- The `entropy` object is a $K x 2$ matrix where the second column contains the entropies of the $K$ summary trees that are returned.
+- The `order` object is a vector containing the ordering of the original data that matches the `data` object returned by the `greedy()` or `optimal()` function. This is so that you can reconcile your original copy of the data with the summary trees.
 
 Ordering of the nodes and the production of the `tree` object is currently required by the C function that does the computation of the maximum entropy summary trees. It will most likely be deprecated in the future, as it's somewhat redundant.
 
