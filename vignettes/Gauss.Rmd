@@ -45,7 +45,7 @@ first.initial <- substr(Gauss[, "label"], 1, 1)
 Gauss[, "label"] <- paste(first.initial, last, sep = " ")
 ```
 
-Next, we compute the maximum entropy $k$-node summary trees for $k = 1, 2, ..., 10$ using three different versions of the algorithm. Setting a maximum size of 10 isn't very realistic -- this is just to illustrate the syntax for all three functions.
+Next, we compute the maximum entropy $k$-node summary trees for $k = 1, 2, ..., 10$ using three different versions of the algorithm. Setting a maximum size of $K = 10$ isn't very realistic -- this is just to illustrate the syntax for all three functions.
 
 ## Greedy Algorithm:
 ```{r greedy-Gauss}
@@ -93,11 +93,11 @@ a$summary.trees[[10]]
 ```
 
 ```{r check-equality}
-all.equal(g$summary.trees[[20]], e$summary.trees[[20]])
-all.equal(g$summary.trees[[20]], a$summary.trees[[20]])
+all.equal(g$summary.trees[[10]], e$summary.trees[[10]])
+all.equal(g$summary.trees[[10]], a$summary.trees[[10]])
 ```
 
-In this case, all three 20-node summary trees are the same. In other words, for $k=20$, the greedy algorithm and the approximate algorithm returned the maximum entropy summary tree (which is always the result of the exact algorithm).
+In this case, all three 10-node summary trees are the same. In other words, for $k=10$, the greedy algorithm and the approximate algorithm returned the maximum entropy summary tree (which is always the result of the exact algorithm).
 
 Sometimes the greedy algorithm does not return the maximum entropy summary tree for a given data set and value of $k$. This is to be expected -- it is not guaranteed to find the global maximum; in practice, it runs much faster than the exact algorithm, and often returns summary trees whose entropies are very close to that of the maximum entropy summary tree.
 
@@ -105,7 +105,7 @@ The approximate algorithm is guaranteed to return a summary tree whose entropy i
 
 For very basic visual EDA, we recommend the greedy algorithm, purely for speed reasons. Then, based on the size of your input tree, for more accurate summaries, we recommend the approximate or exact algorithm.
 
-Also note that the `greedy()` and `optimal()` functions return a list with three objects: `summary.trees`, which we have seen above and contains the list of summary trees for $k = 1, 2, ..., K$, as well as two additional objects: `data` and `tree`. The `data` object is a data.frame containing the input data (node, parent, weight, and label) after having been sorted by level, and then by parent. The `tree` object is a more compact representation of the tree's structure: a matrix with three columns, the first identifying the node ID of each parent in the tree, and the second and third columns containing the node IDs of the first and last child of each parent (which is possible because the nodes have been sorted within each level by parent).
+Also note that the `greedy()` and `optimal()` functions return a list with four objects: `summary.trees`, which we have seen above and contains the list of summary trees for $k = 1, 2, ..., K$, as well as three additional objects: `data`, `tree`, and `entropy`. The `data` object is a data frame containing the input data (node, parent, weight, and label) after having been sorted by level, and then by parent (and then by weight and label, although those last two steps aren't absolutely necessary for the algorithm to run). The `tree` object is a more compact representation of the tree's structure: a matrix with three columns, the first identifying the node ID of each parent in the tree, and the second and third columns containing the node IDs of the first and last child of each parent (which is possible because the nodes have been sorted within each level by parent). The `entropy` object is a $K x 2$ matrix where the second column contains the entropies of the $K$ summary trees that are returned.
 
 Ordering of the nodes and the production of the `tree` object is currently required by the C function that does the computation of the maximum entropy summary trees. It will most likely be deprecated in the future, as it's somewhat redundant.
 
