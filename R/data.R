@@ -62,4 +62,20 @@
 #' @source \url{https://gist.github.com/mbostock/1093025}
 "flare"
 
+#' URL counts within the "Top/Sports" branch of the DMOZ directory.
+#'
+#' A list of the counts of URLs that belong in each topic of the "Top/Sports"
+#' subtree of the DMOZ directory.
+#'
+#' @format A data frame with 15018 rows and 4 variables:
+#' \describe{
+#'   \item{node}{node ID number for each topic, numbered from
+#'               1 to n = 15018 by default}
+#'   \item{parent}{the node ID number of the parent of each node}
+#'   \item{weight}{the number of URLs assigned to each topic in the hierarchy}
+#'   \item{label}{the name of the topic in the hierarchy}
+#' }
+#' @source \url{http://www.dmoz.org/rdf.html}
+"dmoz"
+
 

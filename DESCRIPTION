@@ -8,7 +8,9 @@ Description: Compute maximum entropy summary trees for data
     that can be represented by a rooted, node-weighted tree.
 Depends:
     R (>= 2.10),
-    RJSONIO
+    RJSONIO,
+    RColorBrewer,
+    servr
 License: EPL == 1.0
 LazyData: true
 Suggests:

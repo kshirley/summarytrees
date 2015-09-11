@@ -13,7 +13,17 @@ vignette: >
 knitr::opts_chunk$set(collapse = FALSE, comment = "#>", cache = TRUE)
 ```
 
-Here we'll describe how to compute maximum entropy summary trees to visualize the topic hierarcy of the URLs in DMOZ (aka the Open Directory Project).
+Here we'll describe how to compute maximum entropy summary trees to visualize the topic hierarcy of a subset of the URLs in DMOZ (aka the Open Directory Project).
+
+The DMOZ directory of URLs contains about 3.7 million URLs (as of April 2015), and each URL is classified into a \emph{topic} in the DMOZ topic hierarchy, which contains about 600,000 unique topics. The topic hierarchy is a tree whose maximum depth is 16 levels. In this vignette we will describe:
+
+1. How to process the raw DMOZ data to extract just the counts of URLs that are classified into the "Top/Sports" subtree.
+
+2. How to prepare this data for computation of maximum entropy summary trees, and how to subsequently compute them.
+
+3. How to visualize the resulting series of maximum entropy summary trees using d3.js.
+
+#### Processing the raw DMOZ data
 
 First, we downloaded the DMOZ "content" data in April of 2015 from [http://www.dmoz.org/rdf.html](http://www.dmoz.org/rdf.html). This file was about 1.8 GB unzipped.
 
@@ -21,26 +31,29 @@ Next, we use the command line to extract just the assigned topic of each of the 
 
     grep "<topic>" content.rdf.u8 | sed 's/<topic>//g' | sed 's/<\/topic>//g' | sed 's/^    //g' > dmoz-topics.txt
 
-Next, we read this list of topics into R and compute their frequencies:
-``` {r, dmoz-read}
-raw <- readLines("~/Stats/Trees/dmoz/dmoz-topics.txt")
+Next, we read this list of topics into R and compute their frequencies. Note this chunk is not computed here, because the file is too large to include with the `summarytrees` R package.
+``` {r, dmoz-read, eval = FALSE}
+raw <- readLines("dmoz-topics.txt")
 
 # compute the frequency of each unique topic:
 dmoz.table <- table(raw)
+length(dmoz.table) # There are 595005 unique topics with at least one URL
 
-# order them alphabetically
-dmoz.table <- dmoz.table[order(names(dmoz.table))]
+# retain only those nodes that fall under "Top/Sports/"
+sports.subtree <- dmoz.table[grep("Top/Sports/", names(dmoz.table))]
+length(sports.subtree)  # There are 14284 unique topics in the Top/Sports subtree
+sum(sports.subtree)  # There are 76,535 total URLs classified to this subtree
 
 # separate into names + weights:
-full.node <- names(dmoz.table)  # full node names with slashes
-weight <- as.integer(dmoz.table)  # weights
+full.node <- names(sports.subtree)  # full node names with slashes
+weight <- as.integer(sports.subtree)  # weights
 ```
 
 Now we have to assign each node an ID number and compute the ID number of the node's parent. The only complication here is that some nodes do not currently have their parent node listed in the data, because the parent node is an internal node to which zero URLs are directly assigned.
 
 The following block of code starts with the nodes of the tree that have nonzero weights, looks for their parents, and if any of their parents are not in the tree already, they are added to the tree.
 
-```{r fill-internal-nodes}
+```{r fill-internal-nodes, eval = FALSE}
 # initialize variables
 parent <- NULL  # the vector of all parents
 n.added <- NULL  # how many new internal nodes added each iteration
@@ -51,12 +64,12 @@ new.parent <- rep(NA, length(weight))  # parents of each round of nodes
 t1 <- Sys.time()
 while (sum(is.na(new.parent)) > 0) {
   iter <- iter + 1
-  #print(iter)
+  print(iter)
 
   # split by slash and extract the leaf label of each node, and the 'stem'
-  dmoz.split <- strsplit(to.split, "/")
-  label <- sapply(dmoz.split, function(x) tail(x, 1))
-  stem <- sapply(dmoz.split, function(x) paste(x[-length(x)], collapse = "/"))
+  split.node <- strsplit(to.split, "/")
+  label <- sapply(split.node, function(x) tail(x, 1))
+  stem <- sapply(split.node, function(x) paste(x[-length(x)], collapse = "/"))
 
   # compute the parent of each node:
   new.parent <- match(stem, full.node)
@@ -78,10 +91,9 @@ t2 <- Sys.time()
 t2 - t1
 ```
 
-
 Now we compute the labels, we assemble the nodes, parents, weights, and labels in a data frame, and we clean up one pseudo-node that was computed as the parent of the root.
 
-``` {r assemble}
+``` {r assemble, eval = FALSE}
 label <- sapply(strsplit(full.node, "/"), function(x) tail(x, 1))
 
 # There should be one that is the 'parent' of the root, which is an empty node
@@ -109,14 +121,20 @@ dmoz <- dmoz[-to.remove, ]
 dim(dmoz)
 dmoz[1:10, ]
 table(dmoz[, "weight"] > 0)
+
+# Save this data frame to be included in the package:
+save(dmoz, file = "data/dmoz.RData")
 ```
 
-Now we load the `summarytrees` package and compute maximum entropy summary trees using the greedy algorithm for this data for $k = 1, 2, ..., K = 100$.
+#### Computing Maximum Entropy Summary Trees
 
-``` {r greedy}
+Now we load the `summarytrees` package and compute maximum entropy summary trees using the exact algorithm for this data for $k = 1, 2, ..., K = 100$.
+
+``` {r exact}
 library(devtools)
 install_github("kshirley/summarytrees")
 library(summarytrees)
+data(dmoz)
 
 # compute a set of K summary trees:
 t1 <- Sys.time()
@@ -135,11 +153,11 @@ json <- prepare.vis(tree.list = g$summary.trees,
                     tree = g$tree,
                     legend.width = 150,
                     node.width = 225,
-                    node.height = 12,
+                    node.height = 14,
                     units = "# of URLs",
                     print.weights = TRUE,
                     legend.color = "lightsteelblue",
-                    color.level = 2)
+                    color.level = 3)
 ```
 
 Last, serve the vis in the browser:
@@ -153,11 +171,16 @@ To see this set of 100 maximum entropy summary trees, go [here](http://www.resea
 
 From the visualization, we can see that:
 
-1. The biggest second-level topic is "World", which branches out into lots of different individual languages, the biggest of which is German (in terms of the number of URLs in the directory assigned there.)
+1. The number of URLs per sport is relatively uniformly distributed. Looking at the $k = 20$-node maximum entropy summary tree, we see that 18 individual sports are shown (as children of "Top/Sports") and not one descendant of an individual sport is shown. This is a contrast to many other tree-structured data sets where one or two children of the root contain, say, half the weight of the entire tree, and thus some of their descendants would be members of the 20-node maximum entropy summary tree.
 
-2. The second-level topic "Regional" is comprised mostly of European locations and North American ones. The United States subtree branches out into individual states.
+2. From the 50-node summary tree, we see that the two largest children of "Top/Sports/Soccer" are "UEFA" and "CONCACAF", which are the regional governing bodies for European and North/Central American soccer, respectively. Furthermore, within the UEFA subtree, the child node "England" contains about 5/6 of the weight (i.e. URLs).
 
-3. The largest second-level topics besides "World" and "Regional" are "Business", "Arts", and "Society". Despite having more descendants than "Arts" and "Society", the children of "Business" only appear in the summary trees when $k = 99$, after some children of the other two nodes have appeared. This is because the children of business are relatively small and evenly distributed, thus they didn't increase the overall entropy very much until several of them could be expanded at the same time.
+3. From the 100-node summary tree, we see that this tree is relatively "wide". The maximum depth of the 100-node summary tree is 6 (in the "Top/Sports/Soccer" branch), and there are 36 individual children of "Top/Sports" visualized here (out of 100 nodes). Each child of "Top/Sports" is an individual sport. It might make more sense to insert another level of the hierarchy after "Top/Sports" that categorizes all individual sports in to 5-10 groups of similar sports, using attributes of the sports such as outdoor vs. indoor, team vs. individual, etc., to control the width of the tree. This would only be necessary if having a wide, shallow tree is suboptimal for visualizing/understanding the data.
+
+
+
+
+
 
 
 
