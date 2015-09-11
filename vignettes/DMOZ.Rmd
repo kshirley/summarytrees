@@ -13,9 +13,11 @@ vignette: >
 knitr::opts_chunk$set(collapse = FALSE, comment = "#>", cache = TRUE)
 ```
 
+## Exploring the structure of the DMOZ topic hierarchy using summary trees
+
 Here we'll describe how to compute maximum entropy summary trees to visualize the topic hierarcy of a subset of the URLs in DMOZ (aka the Open Directory Project).
 
-The DMOZ directory of URLs contains about 3.7 million URLs (as of April 2015), and each URL is classified into a \emph{topic} in the DMOZ topic hierarchy, which contains about 600,000 unique topics. The topic hierarchy is a tree whose maximum depth is 16 levels. In this vignette we will describe:
+The DMOZ directory of URLs contains about 3.7 million URLs (as of April 2015), and each URL is classified into a \emph{topic} in the DMOZ topic hierarchy, which contains about 600,000 unique topics. The topic hierarchy is a tree whose maximum depth is 15 levels. In this vignette we will describe:
 
 1. How to process the raw DMOZ data to extract just the counts of URLs that are classified into the "Top/Sports" subtree.
 
@@ -23,7 +25,7 @@ The DMOZ directory of URLs contains about 3.7 million URLs (as of April 2015), a
 
 3. How to visualize the resulting series of maximum entropy summary trees using d3.js.
 
-#### Processing the raw DMOZ data
+### Processing the raw DMOZ data
 
 First, we downloaded the DMOZ "content" data in April of 2015 from [http://www.dmoz.org/rdf.html](http://www.dmoz.org/rdf.html). This file was about 1.8 GB unzipped.
 
@@ -37,11 +39,11 @@ raw <- readLines("dmoz-topics.txt")
 
 # compute the frequency of each unique topic:
 dmoz.table <- table(raw)
-length(dmoz.table) # There are 595005 unique topics with at least one URL
+length(dmoz.table) # There are 595,005 unique topics with at least one URL
 
 # retain only those nodes that fall under "Top/Sports/"
 sports.subtree <- dmoz.table[grep("Top/Sports/", names(dmoz.table))]
-length(sports.subtree)  # There are 14284 unique topics in the Top/Sports subtree
+length(sports.subtree)  # There are 14,284 unique topics in the Top/Sports subtree
 sum(sports.subtree)  # There are 76,535 total URLs classified to this subtree
 
 # separate into names + weights:
@@ -126,13 +128,11 @@ table(dmoz[, "weight"] > 0)
 save(dmoz, file = "data/dmoz.RData")
 ```
 
-#### Computing Maximum Entropy Summary Trees
+### Computing Maximum Entropy Summary Trees
 
-Now we load the `summarytrees` package and compute maximum entropy summary trees using the exact algorithm for this data for $k = 1, 2, ..., K = 100$.
+Now we load the `summarytrees` package and compute maximum entropy summary trees using the greedy algorithm for this data for $k = 1, 2, ..., K = 100$. Note that these aren't technically \emph{ maximum entropy} summary trees since the greedy algorithm does not have any performance guarantees -- we use it here because it's much faster than the exact algorithm, and based on several experiments with real data, returns summary trees whose entropies are usually very close to the corresponding maximum entropy summary trees. 
 
 ``` {r exact}
-library(devtools)
-install_github("kshirley/summarytrees")
 library(summarytrees)
 data(dmoz)
 
@@ -146,8 +146,17 @@ g <- greedy(node = dmoz[, "node"],
             K = K)
 t2 <- Sys.time()
 t2 - t1
+```
 
-# Prepare the summary trees for the visualization:
+We can look at the $k = 20$-node summary tree, for example, by typing
+``` {r inspect}
+g$summary.trees[[20]]
+```
+
+### Visualizing the resulting series of summary trees:
+
+``` {r prepare-vis}
+# Prepare the summary trees for visualization:
 json <- prepare.vis(tree.list = g$summary.trees,
                     labels = g$data[, "label"],
                     tree = g$tree,
@@ -159,6 +168,8 @@ json <- prepare.vis(tree.list = g$summary.trees,
                     legend.color = "lightsteelblue",
                     color.level = 3)
 ```
+Note that we set the `color.level = 3` because every node starts with "Top/Sports", thus the third level is probably going to be the most useful for color-matching so that we can visually track the ancestry of each node in the summary trees.
+
 
 Last, serve the vis in the browser:
 ``` {r serve, eval = FALSE}

@@ -19,16 +19,9 @@ This vignette demonstrates how to compute and visualize maximum entropy summary 
 
 One such data set is the Math Genealogy Tree, which is hosted and managed by the [Math Genealogy Project](http://genealogy.math.ndsu.nodak.edu/). The Math genealogy tree contains information about the advisor-student relationships between mathematicians and scientists in related fields (such as statistics) who have, at some point in history, earned a Ph.D. Technically, the math genealogy tree is not a tree, since some students have multiple advisors (for more on this, see [here](http://genealogy.math.ndsu.nodak.edu/extrema.php)), but we forced the graph to be a tree by assigning each student to their primary advisor (thus removing some edges of the graph). The MGP has kindly agreed to allow us to share a sample from their data: the subtree rooted at Carl Gauss. For more on this sample of data, see `help("Gauss", package = "summarytrees")`.
 
-First, load the package:
-```{r libraries}
-library(devtools)
-#install_github("kshirley/summarytrees")
-#install("~/Git/summarytrees/")
-library(summarytrees)
-```
-
-Next, load the data:
+First, load the package and the Gauss data:
 ```{r load-Gauss}
+library(summarytrees)
 data(Gauss)
 dim(Gauss)
 head(Gauss)
@@ -47,7 +40,7 @@ Gauss[, "label"] <- paste(first.initial, last, sep = " ")
 
 Next, we compute the maximum entropy $k$-node summary trees for $k = 1, 2, ..., 10$ using three different versions of the algorithm. Setting a maximum size of $K = 10$ isn't very realistic -- this is just to illustrate the syntax for the main functions.
 
-## Greedy Algorithm:
+## Greedy Algorithm
 ```{r greedy-Gauss}
 t1 <- Sys.time()
 g <- greedy(node = Gauss[, "node"], 
@@ -59,7 +52,7 @@ t2 <- Sys.time()
 t2 - t1
 ```
 
-## Optimal Algorithm (exact solution):
+## Optimal Algorithm (exact solution)
 ```{r exact-Gauss}
 t1 <- Sys.time()
 e <- optimal(node = Gauss[, "node"], 
@@ -72,7 +65,7 @@ t2 <- Sys.time()
 t2 - t1
 ```
 
-## Optimal Algorithm (approximation):
+## Optimal Algorithm (approximation)
 ```{r approximate-Gauss}
 t1 <- Sys.time()
 a <- optimal(node = Gauss[, "node"], 
