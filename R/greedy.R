@@ -107,6 +107,7 @@ greedy <- function(node = integer(), parent = integer(), weight = numeric(),
 
   # convert the node-parent input data to the parent-children data required by
   # the C program:
+  print("Running order.nodes() function to prepare data")
   new <- order.nodes(node = node, parent = parent,
                      weight = weight, label = label)
   tree <- new$tree
@@ -158,6 +159,7 @@ greedy <- function(node = integer(), parent = integer(), weight = numeric(),
   childend <- as.integer(tree[, 3])
 
   # Run the C function:
+  print("Running C function to compute summary trees")
   tmp <- capture.output(.C("Rgreedy",
           R_K = as.integer(K),
           R_n = as.integer(n),
@@ -167,6 +169,8 @@ greedy <- function(node = integer(), parent = integer(), weight = numeric(),
           R_childstart = as.integer(childstart),
           R_childend = as.integer(childend),
           PACKAGE = "summarytrees"))
+
+  print("Computation finished; now formatting output")
 
   # gather the output
   output <- tmp[1:(which(tmp == "$R_K") - 1)]

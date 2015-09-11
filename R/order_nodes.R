@@ -82,7 +82,7 @@ order.nodes <- function(node = integer(), parent = integer(),
   current.level <- 1
   level[which(parent == 0)] <- current.level
   n.zero <- sum(level == 0)
-  print("Computing node levels")
+  print("  Computing node levels")
   while (n.zero > 0) {
     current.level <- current.level + 1
     in.this.level <- parent %in% node[level == current.level - 1]
@@ -118,7 +118,7 @@ order.nodes <- function(node = integer(), parent = integer(),
   #rownames(data) <- 1:n
 
   # compute children:
-  print("Computing child indices for each parent")
+  print("  Computing child indices for each parent")
   #first.child <- numeric(n)
   #last.child <- numeric(n)
   #a <- aggregate(data[, "node"], by = list(data[, "parent"]), FUN = min)
