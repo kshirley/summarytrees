@@ -32,15 +32,17 @@ The `summarytrees` package implements a dynamic programming algorithm that aggre
 
 To see some demos, visit one of the links in the first column of the table below. The running times reported for each data set (in minutes and seconds) are from a single run (not averaged over multiple runs) computing maximum entropy summary trees for k = 1, 2, .., K = 100 on a single machine with a 2.20 GHz CPU and over 100 GB of RAM. The rightmost three columns report running times for the 3 different versions of the algorithm that are available. See Section 7 of [our paper](http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf) for more details.
 
-|Data           | # Nodes| Total Weight| Max Depth|Optimal |Approx (epsilon = 0.1) |Approx (epsilon  0.5) |Greedy |
-|:--------------|-------:|------------:|---------:|:-------|:--------------------------|:--------------------------|:------|
-|Web Traffic    |   19335|    260276921|        17|  --    |6:08                       |1:02                       |0:05   |
-|Hard Drive     |   15671|       146933|         7|27:58   |16:59                      |2:11                       |0:02   |
-|Tree of Life   |   94080|        54121|       123|6:04    |18:18                      |2:30                       |0:13   |
-|[Math Genealogy](http://www.research.att.com/~kshirley/summarytrees/gauss) |   43527|        43527|        17|6:16    |19:37                      |3:31                       |0:05   |
-|Org Chart      |   43134|        43134|        10|2:19    |6:12                       |0:55                       |0:03   |
-|[DMOZ](http://www.research.att.com/~kshirley/summarytrees/dmoz)           |  635855|      3776432|        15|  --    |44:10                      |8:11                       |1:03   |
-|[R Source](http://www.research.att.com/~kshirley/summarytrees/Rsource)       |    4704|     77420268|         8|  --    |5:09                       |0:59                       |0:01   |
+|Data            | # Nodes| Total Weight| Max Depth|Optimal |Approx (epsilon = 0.1) |Approx (epsilon = 0.5) |Greedy |
+|:---------------|-------:|------------:|---------:|:-------|:-------------------------|:-------------------------|:------|
+|Web Traffic     |   19335|    260276921|        17|--    |6:33                      |1:10                      |0:03   |
+|Hard Drive      |   15671|       146933|         7|20:25   |21:29                     |3:01                      |0:02   |
+|Tree of Life    |   94080|        54121|       123|11:53   |20:44                     |2:34                      |0:09   |
+|[Math Genealogy](http://www.research.att.com/~kshirley/summarytrees/gauss)  |   43527|        43527|        17|11:45   |25:22                     |2:45                      |0:04   |
+|Org Chart       |   43134|        43134|        10|3:53    |10:03                     |0:52                      |0:03   |
+|[DMOZ](http://www.research.att.com/~kshirley/summarytrees/dmoz)            |  635855|      3776432|        15|--    |57:03                     |7:56                      |0:54   |
+|[R Source](http://www.research.att.com/~kshirley/summarytrees/Rsource)        |    4704|     77420268|         8|--    |7:04                      |1:20                      |0:00   |
+|[DMOZ Top/Sports](http://www.research.att.com/~kshirley/summarytrees/dmozsports) |   15018|        76535|        11|41:57   |53:14                     |6:02                      |0:01   |
+
 
 #### Installation
 
@@ -62,7 +64,7 @@ vignette("Gauss", package = "summarytrees")
 ```
 Note: This sample of data has been shared with the permission and cooperation of the Math Genealogy Project; please do not re-distribute it. See `help("Gauss", package = "summarytrees")` for more.
 
-2\. The "DMOZ" vignette contains an analysis of a subset of URLs from the DMOZ (aka Open Directory Project) directory of websites. This data contains all the URLs which are classified into the "Top/Sports" branch of the tree, which consists of about 76,000 URLs spread out over about 14,000 unique topics. The node weights are set to the number of URLs belonging to each topic in the hierarchy.
+2\. The "DMOZ" vignette contains an analysis of a subset of URLs from the DMOZ (aka Open Directory Project) directory of websites. This data contains all the URLs which are classified into the "Top/Sports" branch of the tree, which consists of about 76,000 URLs (about 2% of the total data set) spread out over about 14,000 unique topics. The node weights are set to the number of URLs belonging to each topic in the hierarchy.
 ```{r}
 vignette("DMOZ", package = "summarytrees")
 ```
