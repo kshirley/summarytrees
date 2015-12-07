@@ -24,24 +24,24 @@ The input data looks something like the table below, containing the node ID, the
 
 The `summarytrees` package implements a dynamic programming algorithm that aggregates the nodes of the input tree in an optimal way, maximizing the entropy of the distribution of the node weights of the aggregated tree among all possible aggregations of a given size, subject to certain constraints. The resulting set of *summary trees* can be visualized using d3.js to allow for exploratory data analysis of the strucure and weight distribution of the input tree. Below is a snapshot of the 18-node maximum entropy summary tree of the DMOZ data. Click on the picture to see the interactive version of the visualization.
 
-<a href='http://www.research.att.com/~kshirley/summarytrees/dmoz'>
-<img src='http://www.research.att.com/~kshirley/figures/dmoz-readme.png'>
+<a href='http://www.kennyshirley.com/summarytrees/dmoz'>
+<img src='http://www.kennyshirley.com/figures/dmoz-readme.png'>
 </a>
 
 #### Demonstrations
 
-To see some demos, visit one of the links in the first column of the table below. The running times reported for each data set (in minutes and seconds) are from a single run (not averaged over multiple runs) computing maximum entropy summary trees for k = 1, 2, .., K = 100 on a single machine with a 2.20 GHz CPU and over 100 GB of RAM. The rightmost three columns report running times for the 3 different versions of the algorithm that are available. See Section 7 of [our paper](http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf) for more details.
+To see some demos, visit one of the links in the first column of the table below. The running times reported for each data set (in minutes and seconds) are from a single run (not averaged over multiple runs) computing maximum entropy summary trees for k = 1, 2, .., K = 100 on a single machine with a 2.20 GHz CPU and over 100 GB of RAM. The rightmost three columns report running times for the 3 different versions of the algorithm that are available. See Section 7 of [our paper](http://www.kennyshirley.com/papers/KarloffShirleyWebsite.pdf) for more details.
 
 |Data            | # Nodes| Total Weight| Max Depth|Optimal |Approx (epsilon = 0.1) |Approx (epsilon = 0.5) |Greedy |
 |:---------------|-------:|------------:|---------:|:-------|:-------------------------|:-------------------------|:------|
 |Web Traffic     |   19335|    260276921|        17|--    |6:33                      |1:10                      |0:03   |
 |Hard Drive      |   15671|       146933|         7|20:25   |21:29                     |3:01                      |0:02   |
 |Tree of Life    |   94080|        54121|       123|11:53   |20:44                     |2:34                      |0:09   |
-|[Math Genealogy](http://www.research.att.com/~kshirley/summarytrees/gauss)  |   43527|        43527|        17|11:45   |25:22                     |2:45                      |0:04   |
+|[Math Genealogy](http://www.kennyshirley.com/summarytrees/gauss)  |   43527|        43527|        17|11:45   |25:22                     |2:45                      |0:04   |
 |Org Chart       |   43134|        43134|        10|3:53    |10:03                     |0:52                      |0:03   |
-|[DMOZ](http://www.research.att.com/~kshirley/summarytrees/dmoz)            |  635855|      3776432|        15|--    |57:03                     |7:56                      |0:54   |
-|[R Source](http://www.research.att.com/~kshirley/summarytrees/Rsource)        |    4704|     77420268|         8|--    |7:04                      |1:20                      |0:00   |
-|[DMOZ Top/Sports](http://www.research.att.com/~kshirley/summarytrees/dmozsports) |   15018|        76535|        11|41:57   |53:14                     |6:02                      |0:01   |
+|[DMOZ](http://www.kennyshirley.com/summarytrees/dmoz)            |  635855|      3776432|        15|--    |57:03                     |7:56                      |0:54   |
+|[R Source](http://www.kennyshirley.com/summarytrees/Rsource)        |    4704|     77420268|         8|--    |7:04                      |1:20                      |0:00   |
+|[DMOZ Top/Sports](http://www.kennyshirley.com/summarytrees/dmozsports) |   15018|        76535|        11|41:57   |53:14                     |6:02                      |0:01   |
 
 
 #### Installation
@@ -83,8 +83,8 @@ The original paper describing the algorithm and resulting visualizations is:
 (2013). Howard Karloff and Kenneth E. Shirley. "Maximum Entropy Summary Trees", 
 <i>Computer Graphics Forum (Proc. EuroVis)</i>, Volume 32, Issue 3, Part 1, pp. 71-80.
 
-A copy of the paper is available [here](http://www.research.att.com/~kshirley/papers/KarloffShirleyWebsite.pdf).
+A copy of the paper is available [here](http://www.kennyshirley.com/papers/KarloffShirleyWebsite.pdf).
 
-A website describing the work is [here](http://www.research.att.com/~kshirley/summarytrees).
+A website describing the work is [here](http://www.kennyshirley.com/summarytrees).
 
 
