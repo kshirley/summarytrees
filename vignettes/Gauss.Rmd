@@ -187,7 +187,7 @@ draw.vis(json.object = json,
 
 This visualization can be viewed at:
 
-[http://www.research.att.com/~kshirley/summarytrees/gauss](http://www.research.att.com/~kshirley/summarytrees/gauss)
+[http://www.kennyshirley.com/summarytrees/gauss](http://www.kennyshirley.com/summarytrees/gauss)
 
 A few interesting things to note are:
 
